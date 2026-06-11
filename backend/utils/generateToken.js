@@ -5,10 +5,13 @@ const generateToken = (res, userId) => {
     expiresIn: "30d",
   });
 
+  // Use different cookie settings based on environment
+  const isProduction = process.env.NODE_ENV === "production";
+  
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: isProduction, // Only require HTTPS in production
+    sameSite: isProduction ? "None" : "Lax", // Lax for local development
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };

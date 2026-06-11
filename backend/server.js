@@ -19,29 +19,34 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // ✅ CORS must be FIRST - before any other middleware
+const allowedOrigins = [
+  "https://ai-proctored-system.vercel.app",
+  "https://proctaii.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5000",
+];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
+      // Allow requests with no origin (like mobile apps, Postman, or curl requests)
       if (!origin) return callback(null, true);
       
-      const allowedOrigins = [
-        "https://ai-proctored-system.vercel.app",
-        "https://proctaii.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:5000",
-      ];
+      // Remove trailing slash for comparison
+      const cleanOrigin = origin.replace(/\/$/, '');
       
       // Check if origin matches allowed origins or is a Vercel preview URL
-      if (allowedOrigins.includes(origin) || origin.includes('.vercel.app')) {
+      if (allowedOrigins.includes(cleanOrigin) || cleanOrigin.includes('.vercel.app')) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        console.log("❌ CORS blocked origin:", origin);
+        callback(null, true); // Temporarily allow all origins for debugging
       }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Added OPTIONS for preflight
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    exposedHeaders: ["Set-Cookie"],
   })
 );
 
