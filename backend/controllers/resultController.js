@@ -23,7 +23,6 @@ const saveResult = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Please provide examId and answers");
   }
-
   // Check if result already exists for this user and exam
   const existingResult = await Result.findOne({
     examId,

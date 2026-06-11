@@ -6,6 +6,7 @@ import Exam from "./../models/examModel.js";
 // @access Public
 const getExams = asyncHandler(async (req, res) => {
   const exams = await Exam.find();
+  const now = new Date();
   
   // If user is logged in and is a student, filter exams
   if (req.user && req.user.role === 'student') {
@@ -15,7 +16,8 @@ const getExams = asyncHandler(async (req, res) => {
     const filteredExams = exams.filter(exam => {
       const deptMatch = exam.allowedDepartments.includes('All') || exam.allowedDepartments.includes(studentDept);
       const classMatch = exam.allowedClasses.includes('All') || exam.allowedClasses.includes(studentClass);
-      return deptMatch && classMatch;
+      const isLive = new Date(exam.liveDate) <= now && new Date(exam.deadDate) >= now;
+      return deptMatch && classMatch && isLive;
     });
     
     console.log(`Filtered ${filteredExams.length} exams for student (${studentDept}, ${studentClass})`);

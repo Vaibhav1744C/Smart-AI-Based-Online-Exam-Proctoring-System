@@ -19,7 +19,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useGetQuestionsQuery } from 'src/slices/examApiSlice';
+import { useGetQuestionsQuery, useGetUserResultsQuery } from 'src/slices/examApiSlice';
 import { useCheatingLog } from 'src/context/CheatingLogContext';
 
 function Copyright(props) {
@@ -39,6 +39,18 @@ const DescriptionAndInstructions = () => {
   const navigate = useNavigate();
   const { examId } = useParams();
   const { resetCheatingLog } = useCheatingLog();
+  const { data: userResults } = useGetUserResultsQuery();
+
+  // Check if student already completed this exam
+  const alreadyCompleted = userResults?.data?.some((r) => r.examId === examId);
+
+  // Redirect if already completed
+  React.useEffect(() => {
+    if (alreadyCompleted) {
+      toast.error('You have already completed this exam.');
+      navigate('/dashboard');
+    }
+  }, [alreadyCompleted, navigate]);
 
   // Reset cheating log when starting a new exam
   React.useEffect(() => {

@@ -27,23 +27,10 @@ export const CheatingLogProvider = ({ children }) => {
     }
   }, [userInfo]);
 
-  const updateCheatingLog = (newLog) => {
+  const updateCheatingLog = (newLogOrFn) => {
     setCheatingLog((prev) => {
-      // Ensure all count fields are numbers and have default values
-      const updatedLog = {
-        ...prev,
-        ...newLog,
-        noFaceCount: Number(newLog.noFaceCount || prev.noFaceCount || 0),
-        multipleFaceCount: Number(newLog.multipleFaceCount || prev.multipleFaceCount || 0),
-        cellPhoneCount: Number(newLog.cellPhoneCount || prev.cellPhoneCount || 0),
-        prohibitedObjectCount: Number(
-          newLog.prohibitedObjectCount || prev.prohibitedObjectCount || 0,
-        ),
-        tabSwitchCount: Number(newLog.tabSwitchCount || prev.tabSwitchCount || 0),
-        lookingAwayCount: Number(newLog.lookingAwayCount || prev.lookingAwayCount || 0),
-      };
-      console.log('Updated cheating log:', updatedLog); // Debug log
-      return updatedLog;
+      const newLog = typeof newLogOrFn === 'function' ? newLogOrFn(prev) : newLogOrFn;
+      return { ...prev, ...newLog };
     });
   };
 

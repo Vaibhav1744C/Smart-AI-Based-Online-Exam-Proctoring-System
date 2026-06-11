@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Grid, CircularProgress } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
@@ -12,6 +12,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useCheatingLog } from 'src/context/CheatingLogContext';
 import swal from 'sweetalert';
+import axiosInstance from '../../axios';
 
 const TestPage = () => {
   const { examId, testId } = useParams();
@@ -28,6 +29,7 @@ const TestPage = () => {
   const [questions, setQuestions] = useState([]);
   const { data, isLoading } = useGetQuestionsQuery(examId);
   const [score, setScore] = useState(0);
+  const answersRef = useRef({}); // shared answers ref updated by MCQ component
 
   // Initialize cheating log with exam and user info
   useEffect(() => {
@@ -238,22 +240,6 @@ const TestPage = () => {
 
   // Tab switching detection
   useEffect(() => {
-    // Check total violations
-    const totalViolations = cheatingLog.totalViolations || 0;
-
-    if (totalViolations >= 5) {
-      swal({
-        title: 'Test Terminated!',
-        text: 'You have exceeded the maximum number of violations (5). Please contact your teacher.',
-        icon: 'error',
-        button: 'OK',
-        closeOnClickOutside: false,
-      }).then(() => {
-        navigate('/dashboard');
-      });
-      return;
-    }
-
     const handleVisibilityChange = () => {
       if (document.hidden) {
         const now = Date.now();
@@ -332,9 +318,57 @@ const TestPage = () => {
 
   const handleMcqCompletion = () => {
     setIsMcqCompleted(true);
-    // Don't reset cheating log - we want to keep violations from MCQ section
     navigate(`/exam/${examId}/codedetails`);
   };
+
+  const handleForceSubmitRef = useRef(null);
+  const terminatedRef = useRef(false); // prevent double termination
+
+  // Watch violations — auto submit when limit hit
+  useEffect(() => {
+    const total = cheatingLog.totalViolations || 0;
+    if (total >= 5 && !terminatedRef.current) {
+      terminatedRef.current = true;
+
+      swal({
+        title: 'Exam Terminated!',
+        text: 'You have reached 5 violations. Your exam has been submitted.',
+        icon: 'error',
+        button: 'OK',
+        closeOnClickOutside: false,
+      }).then(async () => {
+        const answers = Object.keys(answersRef.current).length > 0
+          ? answersRef.current
+          : { terminated: 'terminated' };
+
+        try {
+          await axiosInstance.post(
+            '/api/users/results',
+            { examId, answers, subjectiveAnswers: {} },
+            { withCredentials: true }
+          );
+          console.log('[Terminate] ✅ Result saved');
+        } catch (err) {
+          if (err?.response?.status !== 400) {
+            console.error('[Terminate] Result save failed:', err?.response?.data);
+          }
+        }
+
+        try {
+          await saveCheatingLogMutation({
+            ...cheatingLog,
+            username: userInfo?.name,
+            email: userInfo?.email,
+            examId,
+          }).unwrap();
+        } catch (err) {
+          console.error('[Terminate] Cheating log save failed:', err);
+        }
+
+        navigate('/dashboard');
+      });
+    }
+  }, [cheatingLog.totalViolations]);
 
   const handleTestSubmission = async () => {
     if (isSubmitting) return; // Prevent multiple submissions
@@ -405,6 +439,7 @@ const TestPage = () => {
                     submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
                     questions={data}
                     saveUserTestScore={saveUserTestScore}
+                    answersRef={answersRef}
                   />
                 )}
               </Box>
@@ -444,7 +479,10 @@ const TestPage = () => {
                     alignItems="start"
                     justifyContent="center"
                   >
-                    <WebCam cheatingLog={cheatingLog} updateCheatingLog={updateCheatingLog} />
+                <WebCam
+                    cheatingLog={cheatingLog}
+                    updateCheatingLog={updateCheatingLog}
+                  />
                   </Box>
                 </BlankCard>
               </Grid>

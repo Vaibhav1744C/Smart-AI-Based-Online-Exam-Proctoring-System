@@ -21,7 +21,7 @@ import { useCheatingLog } from 'src/context/CheatingLogContext';
 import { useSaveCheatingLogMutation } from 'src/slices/cheatingLogApiSlice';
 import { useSelector } from 'react-redux';
 
-export default function MultipleChoiceQuestion({ questions, saveUserTestScore, submitTest }) {
+export default function MultipleChoiceQuestion({ questions, saveUserTestScore, submitTest, answersRef }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [subjectiveAnswer, setSubjectiveAnswer] = useState('');
@@ -63,6 +63,13 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
   };
+
+  // Keep answersRef in sync so force-submit can access current answers
+  useEffect(() => {
+    if (answersRef) {
+      answersRef.current = Object.fromEntries(answers);
+    }
+  }, [answers, answersRef]);
 
   const handleNextQuestion = async () => {
     const currentQuestionData = questions[currentQuestion];

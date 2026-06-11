@@ -98,6 +98,22 @@ app.use("/api/users", examRoutes);
 app.use("/api/users", resultRoutes);
 app.use("/api/coding", codingRoutes);
 
+// Screenshot upload route
+import { uploadScreenshot } from "./utils/cloudinaryUpload.js";
+app.post("/api/upload/screenshot", async (req, res) => {
+  try {
+    const { dataUrl, examId, type } = req.body;
+    if (!dataUrl || !examId || !type) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+    const url = await uploadScreenshot(dataUrl, examId, type);
+    res.json({ secure_url: url });
+  } catch (err) {
+    console.error("Screenshot upload error:", err.message);
+    res.status(500).json({ message: "Upload failed" });
+  }
+});
+
 // Health check endpoint for all environments
 app.get("/", (req, res) => {
   res.send("<h1>ProctAI Backend Server is Running ✅</h1>");
