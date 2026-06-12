@@ -28,7 +28,6 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState(new Map());
   const [subjectiveAnswers, setSubjectiveAnswers] = useState({});
-  const [hasCodingQuestions, setHasCodingQuestions] = useState(false);
   const navigate = useNavigate();
   const { examId } = useParams();
   const { cheatingLog } = useCheatingLog();
@@ -36,7 +35,6 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
   const { userInfo } = useSelector((state) => state.auth);
 
   const [isLastQuestion, setIsLastQuestion] = useState(false);
-  const [isFinishTest, setisFinishTest] = useState(false);
 
   useEffect(() => {
     console.log('Current question index:', currentQuestion);
@@ -44,21 +42,6 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
     console.log('Current question data:', questions?.[currentQuestion]);
     setIsLastQuestion(currentQuestion === questions.length - 1);
   }, [currentQuestion, questions]);
-
-  // Check if exam has coding questions
-  useEffect(() => {
-    const checkCodingQuestions = async () => {
-      try {
-        const response = await axiosInstance.get(`/api/coding/questions/${examId}`, {
-          withCredentials: true,
-        });
-        setHasCodingQuestions(response.data && response.data.length > 0);
-      } catch (error) {
-        setHasCodingQuestions(false);
-      }
-    };
-    checkCodingQuestions();
-  }, [examId]);
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
@@ -154,25 +137,9 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
           },
         );
 
-        // Check if there are coding questions
-        try {
-          const codingResponse = await axiosInstance.get(`/api/coding/questions/${examId}`, {
-            withCredentials: true,
-          });
-          
-          if (codingResponse.data && codingResponse.data.length > 0) {
-            // Has coding questions, navigate to coding page
-            navigate(`/exam/${examId}/codedetails`);
-          } else {
-            // No coding questions
-            toast.success('Test submitted successfully!');
-            navigate('/Success');
-          }
-        } catch (error) {
-          // No coding questions or error
-          toast.success('Test submitted successfully!');
-          navigate('/Success');
-        }
+        // Always navigate to success page after submission
+        toast.success('Test submitted successfully!');
+        navigate('/Success');
       } catch (error) {
         console.error('Error saving results:', error);
         toast.error('Failed to save results');
@@ -183,8 +150,6 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
     setSubjectiveAnswer('');
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-    } else {
-      setisFinishTest(true);
     }
   };
 
@@ -257,9 +222,7 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
                 }
                 style={{ marginLeft: 'auto' }}
               >
-                {isLastQuestion 
-                  ? (hasCodingQuestions ? 'Proceed to Coding' : 'Submit Test')
-                  : 'Next Question'}
+                {isLastQuestion ? 'Submit Test' : 'Next Question'}
               </Button>
             </Stack>
           </>

@@ -22,7 +22,7 @@ const backgroundImages = [bg1, bg2, bg3, bg4, bg5, bg6];
 // Difficulty levels
 const difficultyLevels = ['Primary', 'Intermediate', 'Advanced', 'Master', 'Ph.D'];
 
-export default function ExamCard({ exam, isCompleted = false }) {
+export default function ExamCard({ exam, isCompleted = false, status = 'active' }) {
   const { examName, duration, totalQuestions, examId } = exam;
   const { userInfo } = useSelector((state) => state.auth);
   const isTeacher = userInfo?.role === 'teacher';
@@ -31,6 +31,9 @@ export default function ExamCard({ exam, isCompleted = false }) {
   const [deleteExam, { isLoading: isDeleting }] = useDeleteExamMutation();
 
   const navigate = useNavigate();
+  
+  // Determine if card should be disabled
+  const isDisabled = status === 'expired' || status === 'upcoming';
 
   // Fetch actual question count
   React.useEffect(() => {
@@ -49,8 +52,8 @@ export default function ExamCard({ exam, isCompleted = false }) {
   }, [examId]);
 
   const handleCardClick = () => {
-    if (isTeacher) {
-      // Teachers shouldn't navigate on card click
+    if (isTeacher || isDisabled) {
+      // Teachers and disabled cards shouldn't navigate
       return;
     }
     if (isCompleted) {
@@ -88,16 +91,17 @@ export default function ExamCard({ exam, isCompleted = false }) {
         backgroundColor: 'white',
         borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        boxShadow: isDisabled ? '0 2px 8px rgba(0,0,0,0.06)' : '0 4px 12px rgba(0,0,0,0.1)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: isTeacher ? 'default' : 'pointer',
+        cursor: isTeacher || isDisabled ? 'default' : 'pointer',
         height: '100%',
         minHeight: '420px',
         display: 'flex',
         flexDirection: 'column',
+        opacity: isDisabled ? 0.7 : 1,
         '&:hover': {
-          transform: isTeacher ? 'none' : 'translateY(-8px)',
-          boxShadow: isTeacher ? '0 4px 12px rgba(0,0,0,0.1)' : '0 16px 32px rgba(0,0,0,0.18)',
+          transform: isTeacher || isDisabled ? 'none' : 'translateY(-8px)',
+          boxShadow: isTeacher || isDisabled ? (isDisabled ? '0 2px 8px rgba(0,0,0,0.06)' : '0 4px 12px rgba(0,0,0,0.1)') : '0 16px 32px rgba(0,0,0,0.18)',
         },
       }}
       onClick={handleCardClick}
@@ -114,10 +118,44 @@ export default function ExamCard({ exam, isCompleted = false }) {
           justifyContent: 'flex-end',
           alignItems: 'flex-start',
           p: 2.5,
-          filter: isCompleted ? 'grayscale(100%)' : 'none',
-          opacity: isCompleted ? 0.92 : 1,
+          filter: isCompleted || isDisabled ? 'grayscale(100%)' : 'none',
+          opacity: isCompleted || isDisabled ? 0.8 : 1,
         }}
       >
+        {/* Status Badge for upcoming/expired */}
+        {status === 'upcoming' && (
+          <Chip
+            label="Upcoming"
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              backgroundColor: '#FEF3C7',
+              color: '#92400E',
+              fontWeight: 700,
+              fontSize: '13px',
+              boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
+            }}
+          />
+        )}
+        {status === 'expired' && (
+          <Chip
+            label="Expired"
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              backgroundColor: '#FEE2E2',
+              color: '#991B1B',
+              fontWeight: 700,
+              fontSize: '13px',
+              boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
+            }}
+          />
+        )}
+        
         {/* Only show question count */}
         {actualQuestionCount > 0 && (
           <Chip
@@ -223,6 +261,26 @@ export default function ExamCard({ exam, isCompleted = false }) {
             >
               {isDeleting ? 'Deleting...' : 'Delete Exam'}
             </Button>
+          ) : status === 'upcoming' ? (
+            <Typography
+              sx={{
+                color: '#92400E',
+                fontSize: '14px',
+                fontWeight: 600,
+              }}
+            >
+              Available on {new Date(exam.liveDate).toLocaleDateString()}
+            </Typography>
+          ) : status === 'expired' ? (
+            <Typography
+              sx={{
+                color: '#991B1B',
+                fontSize: '14px',
+                fontWeight: 600,
+              }}
+            >
+              Exam ended
+            </Typography>
           ) : isCompleted ? (
             <Button
               size="small"

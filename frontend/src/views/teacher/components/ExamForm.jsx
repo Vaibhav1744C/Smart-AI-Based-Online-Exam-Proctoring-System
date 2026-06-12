@@ -21,16 +21,11 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
 
   return (
     <>
-      {title ? (
-        <Typography fontWeight="700" variant="h2" mb={1}>
-          {title}
-        </Typography>
-      ) : null}
-
+      {title}
       {subtext}
 
       <Box component="form">
-        <Stack mb={3}>
+        <Stack spacing={3}>
           <CustomTextField
             id="examName"
             name="examName"
@@ -42,9 +37,7 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
             error={touched.examName && Boolean(errors.examName)}
             helperText={touched.examName && errors.examName}
           />
-        </Stack>
 
-        <Stack mb={3}>
           <CustomTextField
             id="totalQuestions"
             name="totalQuestions"
@@ -56,9 +49,7 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
             error={touched.totalQuestions && Boolean(errors.totalQuestions)}
             helperText={touched.totalQuestions && errors.totalQuestions}
           />
-        </Stack>
 
-        <Stack mb={3}>
           <CustomTextField
             id="duration"
             name="duration"
@@ -70,9 +61,7 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
             error={touched.duration && Boolean(errors.duration)}
             helperText={touched.duration && errors.duration}
           />
-        </Stack>
 
-        <Stack mb={3}>
           <FormControl fullWidth>
             <InputLabel id="departments-label">Allowed Departments</InputLabel>
             <Select
@@ -83,11 +72,9 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
               value={values.allowedDepartments || ['All']}
               onChange={(e) => {
                 const value = e.target.value;
-                // If "All" is selected, only keep "All"
                 if (value.includes('All') && !values.allowedDepartments?.includes('All')) {
                   setFieldValue('allowedDepartments', ['All']);
                 } else if (value.includes('All')) {
-                  // If "All" was already selected and user selects another, remove "All"
                   setFieldValue('allowedDepartments', value.filter(v => v !== 'All'));
                 } else {
                   setFieldValue('allowedDepartments', value);
@@ -109,9 +96,7 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
               ))}
             </Select>
           </FormControl>
-        </Stack>
 
-        <Stack mb={3}>
           <FormControl fullWidth>
             <InputLabel id="classes-label">Allowed Classes</InputLabel>
             <Select
@@ -122,11 +107,9 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
               value={values.allowedClasses || ['All']}
               onChange={(e) => {
                 const value = e.target.value;
-                // If "All" is selected, only keep "All"
                 if (value.includes('All') && !values.allowedClasses?.includes('All')) {
                   setFieldValue('allowedClasses', ['All']);
                 } else if (value.includes('All')) {
-                  // If "All" was already selected and user selects another, remove "All"
                   setFieldValue('allowedClasses', value.filter(v => v !== 'All'));
                 } else {
                   setFieldValue('allowedClasses', value);
@@ -148,9 +131,7 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
               ))}
             </Select>
           </FormControl>
-        </Stack>
 
-        <Stack mb={3}>
           <CustomTextField
             id="liveDate"
             name="liveDate"
@@ -166,9 +147,7 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
               shrink: true,
             }}
           />
-        </Stack>
 
-        <Stack mb={3}>
           <CustomTextField
             id="deadDate"
             name="deadDate"
@@ -184,19 +163,20 @@ const CreateExam = ({ formik, title, subtitle, subtext }) => {
               shrink: true,
             }}
           />
-        </Stack>
 
-        <Button
-          color="primary"
-          variant="contained"
-          size="large"
-          fullWidth
-          type="submit"
-          disabled={formik.isSubmitting}
-          onClick={handleSubmit}
-        >
-          Create Exam
-        </Button>
+          <Button
+            color="primary"
+            variant="contained"
+            size="large"
+            fullWidth
+            type="submit"
+            disabled={formik.isSubmitting}
+            onClick={handleSubmit}
+            sx={{ borderRadius: '8px', mt: 2 }}
+          >
+            Create Exam
+          </Button>
+        </Stack>
       </Box>
 
       {subtitle}

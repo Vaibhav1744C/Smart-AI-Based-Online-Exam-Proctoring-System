@@ -8,23 +8,67 @@ const getExams = asyncHandler(async (req, res) => {
   const exams = await Exam.find();
   const now = new Date();
   
-  // If user is logged in and is a student, filter exams
+  console.log(`Total exams in DB: ${exams.length}`);
+  console.log(`Current time: ${now}`);
+  
+  // If user is logged in and is a student, filter by department/class but show ALL exams (active, upcoming, expired)
   if (req.user && req.user.role === 'student') {
-    const studentDept = req.user.department;
-    const studentClass = req.user.class;
+    const studentDept = req.user.department || 'Computer Science';
+    const studentClass = req.user.class || 'First Year';
+    
+    console.log(`Student: ${req.user.name}, Dept: ${studentDept}, Class: ${studentClass}`);
     
     const filteredExams = exams.filter(exam => {
       const deptMatch = exam.allowedDepartments.includes('All') || exam.allowedDepartments.includes(studentDept);
       const classMatch = exam.allowedClasses.includes('All') || exam.allowedClasses.includes(studentClass);
-      const isLive = new Date(exam.liveDate) <= now && new Date(exam.deadDate) >= now;
-      return deptMatch && classMatch && isLive;
+      
+      console.log(`Exam: ${exam.examName}`);
+      console.log(`  - Allowed Depts: ${exam.allowedDepartments.join(', ')}`);
+      console.log(`  - Allowed Classes: ${exam.allowedClasses.join(', ')}`);
+      console.log(`  - Dept Match: ${deptMatch}, Class Match: ${classMatch}`);
+      
+      return deptMatch && classMatch;
+    }).map(exam => {
+      // Add status to each exam
+      const liveDate = new Date(exam.liveDate);
+      const deadDate = new Date(exam.deadDate);
+      
+      let status = 'active';
+      if (now < liveDate) {
+        status = 'upcoming';
+      } else if (now > deadDate) {
+        status = 'expired';
+      }
+      
+      return {
+        ...exam.toObject(),
+        status
+      };
     });
     
-    console.log(`Filtered ${filteredExams.length} exams for student (${studentDept}, ${studentClass})`);
+    console.log(`Filtered ${filteredExams.length} exams for student`);
     res.status(200).json(filteredExams);
   } else {
-    // Teachers see all exams
-    res.status(200).json(exams);
+    // Teachers see all exams with status
+    const examsWithStatus = exams.map(exam => {
+      const liveDate = new Date(exam.liveDate);
+      const deadDate = new Date(exam.deadDate);
+      
+      let status = 'active';
+      if (now < liveDate) {
+        status = 'upcoming';
+      } else if (now > deadDate) {
+        status = 'expired';
+      }
+      
+      return {
+        ...exam.toObject(),
+        status
+      };
+    });
+    
+    console.log(`Teacher viewing all ${examsWithStatus.length} exams`);
+    res.status(200).json(examsWithStatus);
   }
 });
 

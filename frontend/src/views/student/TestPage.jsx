@@ -24,7 +24,6 @@ const TestPage = () => {
   const { cheatingLog, updateCheatingLog, resetCheatingLog } = useCheatingLog();
   const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMcqCompleted, setIsMcqCompleted] = useState(false);
   const [lastTabSwitchTime, setLastTabSwitchTime] = useState(0);
   const [questions, setQuestions] = useState([]);
   const { data, isLoading } = useGetQuestionsQuery(examId);
@@ -316,10 +315,8 @@ const TestPage = () => {
     }
   }, [data]);
 
-  const handleMcqCompletion = () => {
-    setIsMcqCompleted(true);
-    navigate(`/exam/${examId}/codedetails`);
-  };
+  // Remove the old handleMcqCompletion function that redirects to coding
+  // Both buttons should now directly submit the test
 
   const handleForceSubmitRef = useRef(null);
   const terminatedRef = useRef(false); // prevent double termination
@@ -376,7 +373,13 @@ const TestPage = () => {
     try {
       setIsSubmitting(true);
 
-      // Make sure we have the latest user info in the log
+      // Get current answers from the ref
+      const answersObject = answersRef.current || {};
+      
+      console.log('[TestPage] 📤 Submitting test...');
+      console.log('[TestPage] Answers:', answersObject);
+
+      // Save cheating log FIRST
       const updatedLog = {
         ...cheatingLog,
         username: userInfo.name,
@@ -388,17 +391,44 @@ const TestPage = () => {
 
       console.log('[TestPage] 📤 Submitting cheating log:', updatedLog);
 
-      // Save the cheating log
-      const result = await saveCheatingLogMutation(updatedLog).unwrap();
-      console.log('[TestPage] ✅ Cheating log saved successfully:', result);
+      try {
+        const result = await saveCheatingLogMutation(updatedLog).unwrap();
+        console.log('[TestPage] ✅ Cheating log saved successfully:', result);
+      } catch (logError) {
+        console.error('[TestPage] Error saving cheating log:', logError);
+        // Continue with submission even if log save fails
+      }
+
+      // Save test results
+      try {
+        await axiosInstance.post(
+          '/api/users/results',
+          {
+            examId,
+            answers: answersObject,
+            subjectiveAnswers: {},
+          },
+          {
+            withCredentials: true,
+          },
+        );
+        console.log('[TestPage] ✅ Results saved successfully');
+      } catch (resultError) {
+        // Check if it's a duplicate submission error (400)
+        if (resultError?.response?.status === 400) {
+          console.log('[TestPage] Result already exists, continuing...');
+        } else {
+          throw resultError;
+        }
+      }
 
       toast.success('Test submitted successfully!');
       navigate('/Success');
     } catch (error) {
-      console.error('[TestPage] Error saving cheating log:', error);
+      console.error('[TestPage] Error submitting test:', error);
       console.error('[TestPage] Error details:', error.data, error.status);
       toast.error(
-        error?.data?.message || error?.message || 'Failed to save test logs. Please try again.',
+        error?.data?.message || error?.message || 'Failed to submit test. Please try again.',
       );
     } finally {
       setIsSubmitting(false);
@@ -436,7 +466,7 @@ const TestPage = () => {
                   <CircularProgress />
                 ) : (
                   <MultipleChoiceQuestion
-                    submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
+                    submitTest={handleTestSubmission}
                     questions={data}
                     saveUserTestScore={saveUserTestScore}
                     answersRef={answersRef}
@@ -462,7 +492,7 @@ const TestPage = () => {
                   >
                     <NumberOfQuestions
                       questionLength={questions.length}
-                      submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
+                      submitTest={handleTestSubmission}
                       examDurationInSeconds={examDurationInSeconds}
                     />
                   </Box>

@@ -19,70 +19,21 @@ const Dashboard = () => {
     userResults?.data?.map((result) => result.examId) || []
   );
 
-  // Filter only active exams
-  const activeExams = userExams?.filter((exam) => !completedExamIds.has(exam.examId)) || [];
+  // Categorize exams by status
+  const activeExams = userExams?.filter(
+    (exam) => !completedExamIds.has(exam.examId) && exam.status === 'active'
+  ) || [];
+  
+  const upcomingExams = userExams?.filter(
+    (exam) => !completedExamIds.has(exam.examId) && exam.status === 'upcoming'
+  ) || [];
+  
+  const expiredExams = userExams?.filter(
+    (exam) => !completedExamIds.has(exam.examId) && exam.status === 'expired'
+  ) || [];
 
-  // Fetch leaderboard data
-  React.useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        // Get all results for ranking
-        const response = await axiosInstance.get('/api/users/results');
-        const allResults = response.data.data || [];
-        
-        // Group by exam and calculate rankings
-        const examRankings = {};
-        
-        allResults.forEach(result => {
-          const examId = result.examId;
-          if (!examRankings[examId]) {
-            examRankings[examId] = {
-              examName: result.examName || 'Unknown Exam',
-              students: []
-            };
-          }
-          
-          examRankings[examId].students.push({
-            userId: result.userId,
-            userName: result.userName || 'Anonymous',
-            score: result.totalMarks || 0
-          });
-        });
-        
-        // Calculate rankings for each exam
-        const rankings = [];
-        Object.keys(examRankings).forEach(examId => {
-          const exam = examRankings[examId];
-          // Sort by score descending
-          exam.students.sort((a, b) => b.score - a.score);
-          
-          // Find current user's rank
-          const userRank = exam.students.findIndex(s => s.userId === userInfo?._id);
-          
-          if (userRank !== -1) {
-            rankings.push({
-              examName: exam.examName,
-              rank: userRank + 1,
-              totalStudents: exam.students.length,
-              score: exam.students[userRank].score,
-              topScore: exam.students[0].score
-            });
-          }
-        });
-        
-        // Sort by rank (best ranks first)
-        rankings.sort((a, b) => a.rank - b.rank);
-        setLeaderboardData(rankings.slice(0, 5)); // Show top 5
-        
-      } catch (error) {
-        console.error('Error fetching leaderboard:', error);
-      }
-    };
-    
-    if (userInfo?._id && userResults?.data?.length > 0) {
-      fetchLeaderboard();
-    }
-  }, [userInfo, userResults]);
+  // Fetch leaderboard data - REMOVED (students shouldn't see other students' results)
+  // Teachers can implement leaderboard functionality separately if needed
 
   // Calculate stats
   const totalExams = userExams?.length || 0;
@@ -210,7 +161,7 @@ const Dashboard = () => {
         )}
 
         {/* Active Exams Section */}
-        <Box>
+        <Box sx={{ mb: 5 }}>
           <Typography
             variant="h4"
             sx={{
@@ -242,6 +193,56 @@ const Dashboard = () => {
             </Paper>
           )}
         </Box>
+
+        {/* Upcoming Exams Section */}
+        {upcomingExams.length > 0 && (
+          <Box sx={{ mb: 5 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: '#1e293b',
+                mb: 3,
+                fontSize: { xs: '28px', md: '32px' },
+              }}
+            >
+              Upcoming Exams
+            </Typography>
+
+            <Grid container spacing={4}>
+              {upcomingExams.map((exam) => (
+                <Grid item xs={12} sm={6} md={4} key={exam._id}>
+                  <ExamCard exam={exam} isCompleted={false} status="upcoming" />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
+
+        {/* Expired Exams Section */}
+        {expiredExams.length > 0 && (
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: '#1e293b',
+                mb: 3,
+                fontSize: { xs: '28px', md: '32px' },
+              }}
+            >
+              Expired Exams
+            </Typography>
+
+            <Grid container spacing={4}>
+              {expiredExams.map((exam) => (
+                <Grid item xs={12} sm={6} md={4} key={exam._id}>
+                  <ExamCard exam={exam} isCompleted={false} status="expired" />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
       </Box>
     </>
   );

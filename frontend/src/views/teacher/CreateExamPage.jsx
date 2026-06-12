@@ -62,44 +62,27 @@ const CreateExamPage = () => {
 
   return (
     <PageContainer title="Create Exam" description="Create a new exam">
-      <Box
-        sx={{
-          position: 'relative',
-          '&:before': {
-            content: '""',
-            background: 'radial-gradient(#d2f1df, #d3d7fa, #bad8f4)',
-            backgroundSize: '400% 400%',
-            animation: 'gradient 15s ease infinite',
-            position: 'absolute',
-            height: '100%',
-            width: '100%',
-            opacity: '0.3',
-          },
-        }}
-      >
-        <Grid container spacing={0} justifyContent="center" sx={{ height: '100vh' }}>
-          <Grid
-            item
-            xs={12}
-            sm={12}
-            lg={12}
-            xl={6}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Card elevation={9} sx={{ p: 4, zIndex: 1, width: '100%', maxWidth: '800px' }}>
-              <ExamForm
-                formik={formik}
-                title={
-                  <Typography variant="h3" textAlign="center" color="textPrimary" mb={1}>
-                    Create Exam
-                  </Typography>
-                }
-              />
-            </Card>
-          </Grid>
-        </Grid>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', p: 3 }}>
+        <Card 
+          elevation={0} 
+          sx={{ 
+            p: 4, 
+            width: '100%', 
+            maxWidth: '700px',
+            borderRadius: '12px',
+            border: 1,
+            borderColor: 'divider'
+          }}
+        >
+          <ExamForm
+            formik={formik}
+            title={
+              <Typography variant="h4" color="textPrimary" mb={3}>
+                Create New Exam
+              </Typography>
+            }
+          />
+        </Card>
       </Box>
     </PageContainer>
   );

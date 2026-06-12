@@ -5,12 +5,7 @@ const baseQuery = fetchBaseQuery({ baseUrl: '' });
 export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.REACT_APP_BACKEND_URL,
-    credentials: 'include',
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token');
-      headers.set('Authorization', `Bearer ${token}`);
-      return headers;
-    },
+    credentials: 'include', // This sends cookies automatically
   }),
 
   tagTypes: ['User'],

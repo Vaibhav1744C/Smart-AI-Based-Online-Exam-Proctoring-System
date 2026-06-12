@@ -1,14 +1,11 @@
 import React from 'react';
 import PageContainer from 'src/components/container/PageContainer';
-import DashboardCard from '../../components/shared/DashboardCard';
-import AddQuestionForm from './components/AddQuestionForm';
+import AddQuestionFormRefactored from './components/AddQuestionFormRefactored';
 
 const AddQuestions = () => {
   return (
-    <PageContainer title="Add Questions Page" description="this is Add Questions page">
-      <DashboardCard title="Add Questions">
-        <AddQuestionForm />
-      </DashboardCard>
+    <PageContainer title="Add Questions" description="Create and manage exam questions">
+      <AddQuestionFormRefactored />
     </PageContainer>
   );
 };

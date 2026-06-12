@@ -151,7 +151,7 @@ const UserProfile = () => {
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <IconSchool size={20} />
-                      <Typography variant="body1" color="textSecondary">
+                      <Typography variant="body1" color="textSecondary" component="div">
                         Role: <Chip label={userInfo?.role} size="small" color="primary" />
                       </Typography>
                     </Stack>
