@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+dotenv.config(); // must be first before any other imports that read env vars
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
@@ -8,11 +9,9 @@ import userRoutes from "./routes/userRoutes.js";
 import codingRoutes from "./routes/codingRoutes.js";
 import resultRoutes from "./routes/resultRoutes.js";
 import { exec } from "child_process";
-import fs from "fs";
 import { writeFileSync } from "fs";
-import path from "path";
 import cors from "cors";
-dotenv.config();
+import { uploadScreenshot } from "./utils/cloudinaryUpload.js";
 console.log("MONGO URI =", process.env.MONGO_URI);
 connectDB();
 const app = express();
@@ -54,8 +53,8 @@ app.use(
 app.options("*", cors());
 
 // Then other middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 app.post("/run-python", (req, res) => {
@@ -104,7 +103,6 @@ app.use("/api/users", resultRoutes);
 app.use("/api/coding", codingRoutes);
 
 // Screenshot upload route
-import { uploadScreenshot } from "./utils/cloudinaryUpload.js";
 app.post("/api/upload/screenshot", async (req, res) => {
   try {
     const { dataUrl, examId, type } = req.body;

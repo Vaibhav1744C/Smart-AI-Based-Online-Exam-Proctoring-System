@@ -39,7 +39,8 @@ export default function WebCam({ cheatingLog, updateCheatingLog, onTerminate }) 
       canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0);
 
-      const response = await fetch('/api/upload/screenshot', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const response = await fetch(`${backendUrl}/api/upload/screenshot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -51,6 +52,7 @@ export default function WebCam({ cheatingLog, updateCheatingLog, onTerminate }) 
       });
       const data = await response.json();
       if (data.secure_url) {
+        console.log('✅ Screenshot uploaded:', data.secure_url);
         return { url: data.secure_url, type, detectedAt: new Date() };
       } else {
         console.error('❌ Upload error:', data.message);
