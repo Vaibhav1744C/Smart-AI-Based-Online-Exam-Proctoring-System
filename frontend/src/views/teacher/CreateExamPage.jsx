@@ -37,6 +37,7 @@ const CreateExamPage = () => {
     deadDate: '',
     allowedDepartments: ['All'],
     allowedClasses: ['All'],
+    hasCodingRound: false,
   };
 
   const handleSubmit = async (values) => {
@@ -70,14 +71,21 @@ const CreateExamPage = () => {
             width: '100%', 
             maxWidth: '700px',
             borderRadius: '12px',
-            border: 1,
-            borderColor: 'divider'
+            border: '1px solid #ECECEC',
+            backgroundColor: '#FFFFFF'
           }}
         >
           <ExamForm
             formik={formik}
             title={
-              <Typography variant="h4" color="textPrimary" mb={3}>
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  color: '#003974',
+                  fontWeight: 600,
+                  mb: 3 
+                }}
+              >
                 Create New Exam
               </Typography>
             }

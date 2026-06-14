@@ -7,7 +7,9 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import QuizIcon from '@mui/icons-material/Quiz';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { useDeleteExamMutation } from 'src/slices/examApiSlice';
+import { useGetCodingQuestionsQuery } from 'src/slices/codingQuestionApiSlice';
 
 // Import background images
 import bg1 from '../../../assets/images/backgrounds/6.png'; // Blue
@@ -22,7 +24,7 @@ const backgroundImages = [bg1, bg2, bg3, bg4, bg5, bg6];
 // Difficulty levels
 const difficultyLevels = ['Primary', 'Intermediate', 'Advanced', 'Master', 'Ph.D'];
 
-export default function ExamCard({ exam, isCompleted = false, status = 'active' }) {
+export default function ExamCard({ exam, isCompleted = false, status = 'active', serialNumber = 1 }) {
   const { examName, duration, totalQuestions, examId } = exam;
   const { userInfo } = useSelector((state) => state.auth);
   const isTeacher = userInfo?.role === 'teacher';
@@ -35,21 +37,25 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
   // Determine if card should be disabled
   const isDisabled = status === 'expired' || status === 'upcoming';
 
-  // Fetch actual question count
+  // Fetch coding questions count
+  const { data: codingQuestions } = useGetCodingQuestionsQuery(examId);
+
+  // Fetch actual question count (MCQ + Coding)
   React.useEffect(() => {
     const fetchQuestionCount = async () => {
       try {
         const response = await fetch(`/api/users/questions/exam/${examId}`, {
           credentials: 'include',
         });
-        const questions = await response.json();
-        setActualQuestionCount(questions.length);
+        const mcqQuestions = await response.json();
+        const codingCount = codingQuestions?.length || 0;
+        setActualQuestionCount(mcqQuestions.length + codingCount);
       } catch (error) {
         console.error('Error fetching question count:', error);
       }
     };
     fetchQuestionCount();
-  }, [examId]);
+  }, [examId, codingQuestions]);
 
   const handleCardClick = () => {
     if (isTeacher || isDisabled) {
@@ -57,7 +63,7 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
       return;
     }
     if (isCompleted) {
-      navigate('/result');
+      navigate(`/exam-analytics/${examId}`);
       return;
     }
     navigate(`/exam/${examId}`);
@@ -91,11 +97,11 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
         backgroundColor: 'white',
         borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: isDisabled ? '0 2px 8px rgba(0,0,0,0.06)' : '0 4px 12px rgba(0,0,0,0.1)',
+        boxShadow: isDisabled ? '0 2px 8px rgba(0,0,0,0.04)' : '0 4px 16px rgba(0,0,0,0.06)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: isTeacher || isDisabled ? 'default' : 'pointer',
         height: '100%',
-        minHeight: '420px',
+        minHeight: '400px',
         display: 'flex',
         flexDirection: 'column',
         opacity: isDisabled ? 0.7 : 1,
@@ -109,15 +115,15 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
       {/* Background Image Header */}
       <Box
         sx={{
-          height: '200px',
-          backgroundImage: `url(${selectedBg})`,
+          height: '180px',
+          backgroundImage: 'url(/card.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'flex-start',
-          p: 2.5,
+          p: 2,
           filter: isCompleted || isDisabled ? 'grayscale(100%)' : 'none',
           opacity: isCompleted || isDisabled ? 0.8 : 1,
         }}
@@ -156,23 +162,27 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
           />
         )}
         
-        {/* Only show question count */}
-        {actualQuestionCount > 0 && (
-          <Chip
-            label={actualQuestionCount}
-            size="small"
-            sx={{
-              backgroundColor: '#E0F2FE',
-              color: '#0369A1',
-              fontWeight: 700,
-              fontSize: '15px',
-              height: '36px',
-              boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
-              minWidth: '45px',
-              backdropFilter: 'blur(10px)',
-            }}
-          />
-        )}
+        {/* Only show serial number */}
+        <Box
+          sx={{
+            backgroundColor: '#FFFFFF',
+            color: '#003974',
+            fontWeight: 700,
+            fontSize: '18px',
+            width: '48px',
+            height: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            position: 'absolute',
+            top: 16,
+            right: 16,
+          }}
+        >
+          {serialNumber}
+        </Box>
       </Box>
 
       {/* Card Content */}
@@ -182,7 +192,7 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
           variant="h6"
           sx={{
             fontWeight: 700,
-            color: isCompleted ? '#64748b' : '#1e293b',
+            color: isCompleted ? '#6B7280' : '#003974',
             mb: 1.5,
             fontSize: '20px',
             lineHeight: 1.3,
@@ -201,7 +211,7 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
         <Typography
           variant="body2"
           sx={{
-            color: '#64748b',
+            color: '#6B7280',
             fontSize: '14px',
             mb: 2.5,
             fontWeight: 400,
@@ -216,8 +226,8 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
             display: 'flex',
             alignItems: 'center',
             gap: 3,
-            mb: 3,
-            color: '#64748b',
+            mb: 2,
+            color: '#6B7280',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -237,30 +247,58 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
         {/* Status Section */}
         <Box sx={{ mt: 'auto' }}>
           {isTeacher ? (
-            <Button
-              fullWidth={false}
-              startIcon={<DeleteIcon />}
-              disabled={isDeleting}
-              sx={{
-                color: '#ef4444',
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: '15px',
-                p: 0,
-                justifyContent: 'flex-start',
-                minWidth: 'auto',
-                '&:hover': {
-                  backgroundColor: 'transparent',
-                  color: '#dc2626',
-                },
-                '&:disabled': {
-                  color: '#94a3b8',
-                },
-              }}
-              onClick={handleDeleteExam}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Exam'}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Button
+                fullWidth={false}
+                startIcon={<EditIcon />}
+                sx={{
+                  color: '#003974',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  p: 0,
+                  justifyContent: 'flex-start',
+                  minWidth: 'auto',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 57, 116, 0.08)',
+                    color: '#003974',
+                  },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Clear localStorage for the selected exam
+                  localStorage.removeItem(`examDraft_${examId}`);
+                  localStorage.setItem('selectedExamId', examId);
+                  navigate(`/add-questions?examId=${examId}`);
+                }}
+              >
+                Edit Exam
+              </Button>
+              <Button
+                fullWidth={false}
+                startIcon={<DeleteIcon />}
+                disabled={isDeleting}
+                sx={{
+                  color: '#ED1C24',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  p: 0,
+                  justifyContent: 'flex-start',
+                  minWidth: 'auto',
+                  '&:hover': {
+                    backgroundColor: 'rgba(237, 28, 36, 0.08)',
+                    color: '#ED1C24',
+                  },
+                  '&:disabled': {
+                    color: '#9CA3AF',
+                  },
+                }}
+                onClick={handleDeleteExam}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </Box>
           ) : status === 'upcoming' ? (
             <Typography
               sx={{
@@ -285,10 +323,10 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
             <Button
               size="small"
               sx={{
-                color: '#3b82f6',
+                color: '#003974',
                 textTransform: 'none',
                 fontWeight: 600,
-                fontSize: '15px',
+                fontSize: '14px',
                 p: 0,
                 minWidth: 'auto',
                 '&:hover': {
@@ -298,7 +336,7 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
               }}
               onClick={(e) => {
                 e.stopPropagation();
-                navigate('/result');
+                navigate(`/exam-analytics/${examId}`);
               }}
             >
               View Analytics →
@@ -307,10 +345,10 @@ export default function ExamCard({ exam, isCompleted = false, status = 'active' 
             <Button
               fullWidth={false}
               sx={{
-                color: '#3b82f6',
+                color: '#003974',
                 textTransform: 'none',
                 fontWeight: 600,
-                fontSize: '15px',
+                fontSize: '14px',
                 p: 0,
                 justifyContent: 'flex-start',
                 minWidth: 'auto',

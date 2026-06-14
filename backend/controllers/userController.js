@@ -125,10 +125,39 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     throw new Error("User Not Found");
   }
 });
+
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Verify current password
+  const isPasswordValid = await user.matchPassword(currentPassword);
+  
+  if (!isPasswordValid) {
+    res.status(401);
+    throw new Error("Current password is incorrect");
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json({
+    message: "Password changed successfully",
+  });
+});
+
 export {
   authUser,
   registerUser,
   logoutUser,
   getUserProfile,
   updateUserProfile,
+  changePassword,
 };

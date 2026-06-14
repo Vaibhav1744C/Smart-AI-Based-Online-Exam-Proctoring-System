@@ -1,7 +1,6 @@
 import { useMediaQuery, Box, Drawer, Typography } from '@mui/material';
 import Logo from '../shared/logo/Logo';
 import SidebarItems from './SidebarItems';
-// import { Upgrade } from './Updrade';
 
 const Sidebar = (props) => {
   const lgUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
@@ -27,6 +26,8 @@ const Sidebar = (props) => {
             sx: {
               width: sidebarWidth,
               boxSizing: 'border-box',
+              backgroundColor: '#FFFFFF',
+              borderRight: '1px solid #ECECEC',
             },
           }}
         >
@@ -36,6 +37,8 @@ const Sidebar = (props) => {
           <Box
             sx={{
               height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             {/* ------------------------------------------- */}
@@ -46,9 +49,9 @@ const Sidebar = (props) => {
                 display: 'flex',
                 alignItems: 'center',
                 px: 3,
-                py: 2,
                 width: '100%',
-                gap: 2, // adds spacing between logo and text
+                borderBottom: '1px solid #ECECEC',
+                height: '70px',
               }}
             >
               <Logo />
@@ -59,8 +62,6 @@ const Sidebar = (props) => {
                   fontWeight: 800,
                   fontSize: '2.0rem',
                   color: 'primary.main',
-                  // ml: 10, // ❌ remove this as it pushes it too far right
-                  // mt: 1,  // ❌ remove unnecessary top margin
                   whiteSpace: 'nowrap',
                   mr: 5,
                 }}
@@ -68,12 +69,18 @@ const Sidebar = (props) => {
               </Typography>
             </Box>
 
-            <Box>
-              {/* ------------------------------------------- */}
-              {/* Sidebar Items */}
-              {/* ------------------------------------------- */}
+            {/* ------------------------------------------- */}
+            {/* Main Menu Items */}
+            {/* ------------------------------------------- */}
+            <Box sx={{ flex: 1, overflow: 'auto' }}>
               <SidebarItems />
-              {/* <Upgrade /> */}
+            </Box>
+
+            {/* ------------------------------------------- */}
+            {/* Bottom Menu Items (Settings & Logout) */}
+            {/* ------------------------------------------- */}
+            <Box sx={{ borderTop: '1px solid #ECECEC', pt: 2, pb: 2 }}>
+              <SidebarItems isBottomMenu={true} />
             </Box>
           </Box>
         </Drawer>
@@ -91,39 +98,62 @@ const Sidebar = (props) => {
         sx: {
           width: sidebarWidth,
           boxShadow: (theme) => theme.shadows[8],
+          backgroundColor: '#FFFFFF',
+          borderRight: '1px solid #ECECEC',
         },
       }}
     >
       {/* ------------------------------------------- */}
-      {/* Logo */}
+      {/* Sidebar Box */}
       {/* ------------------------------------------- */}
       <Box
         sx={{
+          height: '100%',
           display: 'flex',
-          alignItems: 'center',
-          px: 2,
-          py: 2,
-          width: '120%',
+          flexDirection: 'column',
         }}
       >
-        <Logo />
-        <Typography
-          variant="h6"
+        {/* ------------------------------------------- */}
+        {/* Logo */}
+        {/* ------------------------------------------- */}
+        <Box
           sx={{
-            fontWeight: 600,
-            fontSize: '1.0rem',
-            color: 'primary.main',
-            ml: 1,
+            display: 'flex',
+            alignItems: 'center',
+            px: 3,
+            width: '100%',
+            borderBottom: '1px solid #ECECEC',
+            height: '70px',
           }}
         >
-          AI EVAL_8
-        </Typography>
+          <Logo />
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 800,
+              fontSize: '2.0rem',
+              color: 'primary.main',
+              whiteSpace: 'nowrap',
+              mr: 5,
+            }}
+          >
+          </Typography>
+        </Box>
+
+        {/* ------------------------------------------- */}
+        {/* Main Menu Items */}
+        {/* ------------------------------------------- */}
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <SidebarItems />
+        </Box>
+
+        {/* ------------------------------------------- */}
+        {/* Bottom Menu Items (Settings & Logout) */}
+        {/* ------------------------------------------- */}
+        <Box sx={{ borderTop: '1px solid #ECECEC', pt: 2, pb: 2 }}>
+          <SidebarItems isBottomMenu={true} />
+        </Box>
       </Box>
-      {/* ------------------------------------------- */}
-      {/* Sidebar For Mobile */}
-      {/* ------------------------------------------- */}
-      <SidebarItems />
-      {/* <Upgrade /> */}
     </Drawer>
   );
 };

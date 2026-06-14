@@ -8,6 +8,7 @@ import examRoutes from "./routes/examRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import codingRoutes from "./routes/codingRoutes.js";
 import resultRoutes from "./routes/resultRoutes.js";
+import codingQuestionRoutes from "./routes/codingQuestionRoutes.js";
 import { exec } from "child_process";
 import { writeFileSync } from "fs";
 import cors from "cors";
@@ -101,6 +102,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/users", examRoutes);
 app.use("/api/users", resultRoutes);
 app.use("/api/coding", codingRoutes);
+app.use("/api/coding-questions", codingQuestionRoutes);
 
 // Screenshot upload route
 app.post("/api/upload/screenshot", async (req, res) => {

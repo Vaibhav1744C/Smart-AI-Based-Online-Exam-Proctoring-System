@@ -17,14 +17,14 @@ const Logo = () => {
         width: '40px', 
         height: '40px', 
         borderRadius: '50%', 
-        bgcolor: '#3b82f6',
+        bgcolor: '#003974',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
         <RemoveRedEyeIcon sx={{ color: 'white', fontSize: '24px' }} />
       </Box>
-      <Typography variant="h5" sx={{ fontWeight: 700, color: '#3b82f6', letterSpacing: '-0.5px' }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, color: '#003974', letterSpacing: '-0.5px' }}>
         ProctAI
       </Typography>
     </LinkStyled>

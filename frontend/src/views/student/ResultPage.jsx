@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -60,10 +61,11 @@ import {
   Radar,
 } from 'recharts';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+const COLORS = ['#003974', '#ED1C24', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const ResultPage = () => {
   const { userInfo } = useSelector((state) => state.auth);
+  const [searchParams] = useSearchParams();
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,19 +87,32 @@ const ResultPage = () => {
         });
         setExams(examsResponse.data);
 
-        // Fetch results based on user role
-        if (userInfo?.role === 'teacher') {
-          // For teachers, fetch all results
-          const resultsResponse = await axiosInstance.get('/api/users/results/all', {
+        // Check if examId is in URL query parameters
+        const examIdFromUrl = searchParams.get('examId');
+        
+        if (examIdFromUrl) {
+          // Set the selected exam from URL
+          setSelectedExam(examIdFromUrl);
+          // Fetch results for specific exam
+          const resultsResponse = await axiosInstance.get(`/api/users/results/exam/${examIdFromUrl}`, {
             withCredentials: true,
           });
           setResults(resultsResponse.data.data);
         } else {
-          // For students, fetch only their visible results
-          const resultsResponse = await axiosInstance.get('/api/users/results/user', {
-            withCredentials: true,
-          });
-          setResults(resultsResponse.data.data);
+          // Fetch results based on user role
+          if (userInfo?.role === 'teacher') {
+            // For teachers, fetch all results
+            const resultsResponse = await axiosInstance.get('/api/users/results/all', {
+              withCredentials: true,
+            });
+            setResults(resultsResponse.data.data);
+          } else {
+            // For students, fetch only their visible results
+            const resultsResponse = await axiosInstance.get('/api/users/results/user', {
+              withCredentials: true,
+            });
+            setResults(resultsResponse.data.data);
+          }
         }
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to fetch data');
@@ -108,7 +123,7 @@ const ResultPage = () => {
     };
 
     fetchData();
-  }, [userInfo]);
+  }, [userInfo, searchParams]);
 
   const handleToggleVisibility = async (resultId) => {
     try {
@@ -206,8 +221,8 @@ const ResultPage = () => {
     printWindow.document.write('h1 { color: #333; text-align: center; }');
     printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
     printWindow.document.write('th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }');
-    printWindow.document.write('th { background-color: #4CAF50; color: white; }');
-    printWindow.document.write('tr:nth-child(even) { background-color: #f2f2f2; }');
+    printWindow.document.write('th { background-color: #003974; color: white; }');
+    printWindow.document.write('tr:nth-child(even) { background-color: #F8F9FB; }');
     printWindow.document.write('.summary { display: flex; justify-content: space-around; margin: 20px 0; }');
     printWindow.document.write('.summary-card { text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px; }');
     printWindow.document.write('.summary-card h3 { margin: 0; color: #666; font-size: 14px; }');
@@ -295,12 +310,17 @@ const ResultPage = () => {
   const getDetailedScoreAnalysis = () => {
     if (!filteredResults || filteredResults.length === 0) return [];
 
-    return filteredResults.map((result, index) => ({
-      exam: exams.find((e) => e._id === result.examId || e.examId === result.examId)?.examName || `Exam ${index + 1}`,
-      score: parseFloat((result.percentage || 0).toFixed(1)),
-      totalMarks: result.totalMarks || 0,
-      date: new Date(result.createdAt).toLocaleDateString(),
-    }));
+    return filteredResults.map((result, index) => {
+      const fullName = exams.find((e) => e._id === result.examId || e.examId === result.examId)?.examName || `Exam ${index + 1}`;
+      
+      return {
+        exam: `T${index + 1}`,
+        fullExam: fullName,
+        score: parseFloat((result.percentage || 0).toFixed(1)),
+        totalMarks: result.totalMarks || 0,
+        date: new Date(result.createdAt).toLocaleDateString(),
+      };
+    });
   };
 
   const getSubjectiveVsCodingPerformance = () => {
@@ -348,12 +368,12 @@ const ResultPage = () => {
     if (!filteredResults || filteredResults.length === 0) return [];
 
     const grades = [
-      { name: 'A+ (90-100%)', min: 90, max: 100, count: 0, color: '#00C49F' },
+      { name: 'A+ (90-100%)', min: 90, max: 100, count: 0, color: '#003974' },
       { name: 'A (80-89%)', min: 80, max: 89, count: 0, color: '#0088FE' },
-      { name: 'B (70-79%)', min: 70, max: 79, count: 0, color: '#FFBB28' },
-      { name: 'C (60-69%)', min: 60, max: 69, count: 0, color: '#FF8042' },
-      { name: 'D (40-59%)', min: 40, max: 59, count: 0, color: '#8884D8' },
-      { name: 'F (<40%)', min: 0, max: 39, count: 0, color: '#FF0000' },
+      { name: 'B (70-79%)', min: 70, max: 79, count: 0, color: '#00C49F' },
+      { name: 'C (60-69%)', min: 60, max: 69, count: 0, color: '#FFBB28' },
+      { name: 'D (40-59%)', min: 40, max: 59, count: 0, color: '#FF8042' },
+      { name: 'F (<40%)', min: 0, max: 39, count: 0, color: '#ED1C24' },
     ];
 
     filteredResults.forEach((result) => {
@@ -556,6 +576,16 @@ const ResultPage = () => {
               startIcon={<Assessment />}
               onClick={() => setShowAnalytics(!showAnalytics)}
               fullWidth
+              sx={{
+                borderColor: '#003974',
+                color: '#003974',
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: '#003974',
+                  color: '#FFFFFF',
+                  borderColor: '#003974',
+                },
+              }}
             >
               {showAnalytics ? 'Hide Analytics' : 'Show Detailed Analytics'}
             </Button>
@@ -575,21 +605,30 @@ const ResultPage = () => {
                   {/* Detailed Score Analysis */}
                   <Grid item xs={12} md={6}>
                     <DashboardCard title="Score Breakdown by Exam">
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={getDetailedScoreAnalysis()}>
+                      <ResponsiveContainer width="100%" height={320}>
+                        <BarChart data={getDetailedScoreAnalysis()} margin={{ top: 20, right: 20, left: 20, bottom: 35 }}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis 
                             dataKey="exam" 
-                            angle={0} 
-                            textAnchor="middle" 
-                            height={60}
-                            interval={0}
                             tick={{ fontSize: 12 }}
+                            height={50}
+                            label={{ value: 'Tests', position: 'insideBottom', offset: -5, style: { fontSize: 13, fill: '#6B7280', fontWeight: 600 } }}
                           />
                           <YAxis domain={[0, 100]} label={{ value: 'Score %', angle: -90, position: 'insideLeft' }} />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="score" fill="#8884d8" name="Score %" radius={[8, 8, 0, 0]} />
+                          <Tooltip 
+                            formatter={(value, name, props) => {
+                              if (name === 'Score %') return [`${value}%`, name];
+                              return [value, name];
+                            }}
+                            labelFormatter={(label, payload) => {
+                              if (payload && payload[0]) {
+                                return payload[0].payload.fullExam || label;
+                              }
+                              return label;
+                            }}
+                          />
+                          <Legend wrapperStyle={{ paddingTop: '10px' }} align="left" />
+                          <Bar dataKey="score" fill="#003974" name="Score %" radius={[8, 8, 0, 0]} minPointSize={5} />
                         </BarChart>
                       </ResponsiveContainer>
                     </DashboardCard>
@@ -598,8 +637,8 @@ const ResultPage = () => {
                   {/* Grade Distribution Pie */}
                   <Grid item xs={12} md={6}>
                     <DashboardCard title="Grade Distribution">
-                      <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
+                      <ResponsiveContainer width="100%" height={320}>
+                        <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                           <Pie
                             data={getGradeDistribution()}
                             cx="50%"
@@ -615,7 +654,7 @@ const ResultPage = () => {
                             ))}
                           </Pie>
                           <Tooltip />
-                          <Legend />
+                          <Legend align="left" />
                         </PieChart>
                       </ResponsiveContainer>
                     </DashboardCard>
@@ -625,7 +664,7 @@ const ResultPage = () => {
                   <Grid item xs={12}>
                     <DashboardCard title="Performance Progress Over Time">
                       <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={getProgressOverTime()}>
+                        <LineChart data={getProgressOverTime()} margin={{ top: 20, right: 20, bottom: 5, left: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="exam" />
                           <YAxis domain={[0, 100]} label={{ value: 'Score %', angle: -90, position: 'insideLeft' }} />
@@ -634,7 +673,7 @@ const ResultPage = () => {
                           <Line 
                             type="monotone" 
                             dataKey="currentScore" 
-                            stroke="#8884d8" 
+                            stroke="#003974" 
                             strokeWidth={3} 
                             name="Current Score" 
                             dot={{ r: 6 }}
@@ -642,7 +681,7 @@ const ResultPage = () => {
                           <Line 
                             type="monotone" 
                             dataKey="averageScore" 
-                            stroke="#82ca9d" 
+                            stroke="#ED1C24" 
                             strokeWidth={2} 
                             strokeDasharray="5 5"
                             name="Running Average" 
@@ -681,14 +720,22 @@ const ResultPage = () => {
                         <TableCell>
                           <Chip
                             label={`${result.percentage.toFixed(1)}%`}
-                            color={result.percentage >= 70 ? 'success' : 'warning'}
+                            sx={{
+                              backgroundColor: result.percentage >= 70 ? '#DCFCE7' : result.percentage >= 40 ? '#FEF3C7' : '#FEE2E2',
+                              color: result.percentage >= 70 ? '#166534' : result.percentage >= 40 ? '#92400E' : '#991B1B',
+                              fontWeight: 600,
+                            }}
                           />
                         </TableCell>
                         <TableCell>
                           {result.subjectiveResponses?.length > 0 ? (
                             <Chip
                               label={`${result.subjectiveResponses.reduce((sum, sr) => sum + sr.aiScore, 0)}/${result.subjectiveResponses.reduce((sum, sr) => sum + sr.maxMarks, 0)}`}
-                              color="info"
+                              sx={{
+                                backgroundColor: '#E0F2FE',
+                                color: '#003974',
+                                fontWeight: 600,
+                              }}
                             />
                           ) : (
                             '-'
@@ -751,7 +798,11 @@ const ResultPage = () => {
                     <Box display="flex" gap={1} alignItems="center">
                       <Chip
                         label={`Score: ${response.aiScore}/${response.maxMarks}`}
-                        color={response.aiScore >= response.maxMarks * 0.7 ? 'success' : 'warning'}
+                        sx={{
+                          backgroundColor: response.aiScore >= response.maxMarks * 0.7 ? '#DCFCE7' : '#FEF3C7',
+                          color: response.aiScore >= response.maxMarks * 0.7 ? '#166534' : '#92400E',
+                          fontWeight: 600,
+                        }}
                       />
                       <Typography variant="body2" color="textSecondary">
                         Feedback: {response.aiFeedback}
@@ -773,9 +824,28 @@ const ResultPage = () => {
                   {submission.code}
                 </SyntaxHighlighter>
                 <Box mt={1}>
-                  <Chip icon={<CheckCircle />} label="Success" color="success" />
+                  <Chip 
+                    icon={<CheckCircle />} 
+                    label="Success" 
+                    sx={{
+                      backgroundColor: '#DCFCE7',
+                      color: '#166534',
+                      fontWeight: 600,
+                      '& .MuiChip-icon': {
+                        color: '#166534',
+                      }
+                    }}
+                  />
                   {submission.executionTime && (
-                    <Chip label={`Execution Time: ${submission.executionTime}ms`} sx={{ ml: 1 }} />
+                    <Chip 
+                      label={`Execution Time: ${submission.executionTime}ms`} 
+                      sx={{ 
+                        ml: 1,
+                        backgroundColor: '#E0F2FE',
+                        color: '#003974',
+                        fontWeight: 600,
+                      }} 
+                    />
                   )}
                 </Box>
               </Box>
@@ -795,22 +865,22 @@ const ResultPage = () => {
       <Grid container spacing={3}>
         {/* Summary Cards */}
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ borderLeft: '4px solid #003974' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#6B7280', fontWeight: 600 }}>
                 Total Students
               </Typography>
-              <Typography variant="h3">{filteredResults.length}</Typography>
+              <Typography variant="h3" sx={{ color: '#003974', fontWeight: 700 }}>{filteredResults.length}</Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ borderLeft: '4px solid #003974' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#6B7280', fontWeight: 600 }}>
                 Average Score
               </Typography>
-              <Typography variant="h3">
+              <Typography variant="h3" sx={{ color: '#003974', fontWeight: 700 }}>
                 {filteredResults.length > 0
                   ? `${(
                       filteredResults.reduce((acc, curr) => acc + curr.percentage, 0) /
@@ -822,12 +892,12 @@ const ResultPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ borderLeft: '4px solid #003974' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#6B7280', fontWeight: 600 }}>
                 Pass Rate
               </Typography>
-              <Typography variant="h3">
+              <Typography variant="h3" sx={{ color: '#003974', fontWeight: 700 }}>
                 {filteredResults.length > 0
                   ? `${((filteredResults.filter((r) => r.percentage >= 40).length / filteredResults.length) * 100).toFixed(1)}%`
                   : '0%'}
@@ -836,12 +906,12 @@ const ResultPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ borderLeft: '4px solid #003974' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#6B7280', fontWeight: 600 }}>
                 Total Results
               </Typography>
-              <Typography variant="h3">
+              <Typography variant="h3" sx={{ color: '#003974', fontWeight: 700 }}>
                 {filteredResults.length}
               </Typography>
             </CardContent>
@@ -855,6 +925,16 @@ const ResultPage = () => {
             startIcon={<Assessment />}
             onClick={() => setShowAnalytics(!showAnalytics)}
             fullWidth
+            sx={{
+              borderColor: '#003974',
+              color: '#003974',
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: '#003974',
+                color: '#FFFFFF',
+                borderColor: '#003974',
+              },
+            }}
           >
             {showAnalytics ? 'Hide Analytics' : 'Show Detailed Analytics'}
           </Button>
@@ -888,7 +968,7 @@ const ResultPage = () => {
                         <YAxis domain={[0, 100]} label={{ value: 'Score %', angle: -90, position: 'insideLeft' }} />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="score" fill="#8884d8" name="Score %" radius={[8, 8, 0, 0]} />
+                        <Bar dataKey="score" fill="#003974" name="Score %" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </DashboardCard>
@@ -927,7 +1007,7 @@ const ResultPage = () => {
                         <PolarGrid />
                         <PolarAngleAxis dataKey="metric" />
                         <PolarRadiusAxis domain={[0, 100]} />
-                        <Radar name="Performance" dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                        <Radar name="Performance" dataKey="value" stroke="#003974" fill="#003974" fillOpacity={0.6} />
                         <Tooltip />
                       </RadarChart>
                     </ResponsiveContainer>
@@ -951,7 +1031,7 @@ const ResultPage = () => {
                         <YAxis domain={[0, 100]} label={{ value: 'Avg Score %', angle: -90, position: 'insideLeft' }} />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="avgScore" fill="#82ca9d" name="Average Score %" radius={[8, 8, 0, 0]} />
+                        <Bar dataKey="avgScore" fill="#003974" name="Average Score %" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </DashboardCard>
@@ -976,14 +1056,26 @@ const ResultPage = () => {
                               <TableCell>
                                 <Chip
                                   label={`#${performer.rank}`}
-                                  color={performer.rank === 1 ? 'success' : performer.rank === 2 ? 'primary' : 'default'}
+                                  sx={{
+                                    backgroundColor: performer.rank === 1 ? '#DCFCE7' : performer.rank === 2 ? '#E0F2FE' : '#F8F9FB',
+                                    color: performer.rank === 1 ? '#166534' : performer.rank === 2 ? '#003974' : '#6B7280',
+                                    fontWeight: 600,
+                                  }}
                                   size="small"
                                 />
                               </TableCell>
                               <TableCell><strong>{performer.name}</strong></TableCell>
                               <TableCell>{performer.exam}</TableCell>
                               <TableCell>
-                                <Chip label={`${performer.score}%`} color="primary" size="small" />
+                                <Chip 
+                                  label={`${performer.score}%`} 
+                                  sx={{
+                                    backgroundColor: '#E0F2FE',
+                                    color: '#003974',
+                                    fontWeight: 600,
+                                  }}
+                                  size="small" 
+                                />
                               </TableCell>
                             </TableRow>
                           ))}
@@ -1012,7 +1104,7 @@ const ResultPage = () => {
                           dataKey="value"
                         >
                           {[0, 1].map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === 0 ? '#00C49F' : '#FF8042'} />
+                            <Cell key={`cell-${index}`} fill={index === 0 ? '#003974' : '#ED1C24'} />
                           ))}
                         </Pie>
                         <Tooltip />
@@ -1065,6 +1157,16 @@ const ResultPage = () => {
                   startIcon={<Download />}
                   onClick={downloadCSV}
                   disabled={filteredResults.length === 0}
+                  sx={{
+                    borderColor: '#003974',
+                    color: '#003974',
+                    fontWeight: 600,
+                    '&:hover': {
+                      backgroundColor: '#003974',
+                      color: '#FFFFFF',
+                      borderColor: '#003974',
+                    },
+                  }}
                 >
                   Download CSV
                 </Button>
@@ -1073,7 +1175,16 @@ const ResultPage = () => {
                   startIcon={<PictureAsPdf />}
                   onClick={downloadPDF}
                   disabled={filteredResults.length === 0}
-                  color="error"
+                  sx={{
+                    borderColor: '#ED1C24',
+                    color: '#ED1C24',
+                    fontWeight: 600,
+                    '&:hover': {
+                      backgroundColor: '#ED1C24',
+                      color: '#FFFFFF',
+                      borderColor: '#ED1C24',
+                    },
+                  }}
                 >
                   Download PDF
                 </Button>
@@ -1083,55 +1194,83 @@ const ResultPage = () => {
             <Tabs
               value={selectedTab}
               onChange={(e, newValue) => setSelectedTab(newValue)}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: 2,
+                '& .MuiTab-root': {
+                  color: '#6B7280',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  fontSize: '15px',
+                },
+                '& .Mui-selected': {
+                  color: '#003974',
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#ED1C24',
+                  height: '3px',
+                },
+              }}
             >
               <Tab label="All Results" />
               <Tab label="MCQ Results" />
             </Tabs>
 
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>Student Name</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Exam</TableCell>
-                    <TableCell>Total Score</TableCell>
-                    <TableCell>Coding Submissions</TableCell>
-                    <TableCell>Total Score</TableCell>
-                    <TableCell>Submission Date</TableCell>
-                    <TableCell>Actions</TableCell>
+                  <TableRow sx={{ backgroundColor: '#F8F9FB' }}>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Student Name</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Email</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Exam</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Total Score</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Coding Submissions</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Total Score</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Submission Date</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#0F2242' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredResults.map((result) => (
-                    <TableRow key={result._id}>
-                      <TableCell>{result.userId?.name}</TableCell>
-                      <TableCell>{result.userId?.email}</TableCell>
-                      <TableCell>
+                    <TableRow 
+                      key={result._id}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: '#F8F9FB',
+                        },
+                      }}
+                    >
+                      <TableCell sx={{ color: '#0F2242' }}>{result.userId?.name}</TableCell>
+                      <TableCell sx={{ color: '#6B7280' }}>{result.userId?.email}</TableCell>
+                      <TableCell sx={{ color: '#0F2242' }}>
                         {exams.find((e) => e._id === result.examId || e.examId === result.examId)?.examName || result.examId}
                       </TableCell>
                       <TableCell>
                         <Chip
                           label={`${result.percentage.toFixed(1)}%`}
-                          color={result.percentage >= 70 ? 'success' : 'warning'}
+                          sx={{
+                            backgroundColor: result.percentage >= 70 ? '#DCFCE7' : '#FEF3C7',
+                            color: result.percentage >= 70 ? '#166534' : '#92400E',
+                            fontWeight: 600,
+                          }}
                         />
                       </TableCell>
                       <TableCell>
                         <Box display="flex" alignItems="center" gap={1}>
-                          <CheckCircle color="success" fontSize="small" />
+                          <CheckCircle sx={{ color: '#003974' }} fontSize="small" />
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="textSecondary">
+                        <Typography variant="body2" sx={{ color: '#6B7280' }}>
                           Total: {result.totalMarks}
                         </Typography>
                       </TableCell>
-                      <TableCell>{new Date(result.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell sx={{ color: '#6B7280' }}>{new Date(result.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <IconButton
                           onClick={() => handleToggleVisibility(result._id)}
-                          color={result.showToStudent ? 'success' : 'default'}
+                          sx={{
+                            color: result.showToStudent ? '#003974' : '#6B7280',
+                          }}
                         >
                           {result.showToStudent ? <Visibility /> : <VisibilityOff />}
                         </IconButton>
@@ -1166,9 +1305,28 @@ const ResultPage = () => {
                 {submission.code}
               </SyntaxHighlighter>
               <Box mt={1}>
-                <Chip icon={<CheckCircle />} label="Success" color="success" />
+                <Chip 
+                  icon={<CheckCircle />} 
+                  label="Success" 
+                  sx={{
+                    backgroundColor: '#DCFCE7',
+                    color: '#166534',
+                    fontWeight: 600,
+                    '& .MuiChip-icon': {
+                      color: '#166534',
+                    }
+                  }}
+                />
                 {submission.executionTime && (
-                  <Chip label={`Execution Time: ${submission.executionTime}ms`} sx={{ ml: 1 }} />
+                  <Chip 
+                    label={`Execution Time: ${submission.executionTime}ms`} 
+                    sx={{ 
+                      ml: 1,
+                      backgroundColor: '#E0F2FE',
+                      color: '#003974',
+                      fontWeight: 600,
+                    }} 
+                  />
                 )}
               </Box>
             </Box>

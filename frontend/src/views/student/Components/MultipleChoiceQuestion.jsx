@@ -12,7 +12,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
-import { Container } from '@mui/material';
+import { Container, Select, MenuItem, InputLabel } from '@mui/material';
 import { useGetQuestionsQuery } from 'src/slices/examApiSlice';
 import { useNavigate, useParams } from 'react-router';
 import axiosInstance from '../../../axios';
@@ -25,9 +25,12 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [subjectiveAnswer, setSubjectiveAnswer] = useState('');
+  const [codingAnswer, setCodingAnswer] = useState('');
+  const [codingLanguage, setCodingLanguage] = useState('javascript');
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState(new Map());
   const [subjectiveAnswers, setSubjectiveAnswers] = useState({});
+  const [codingAnswers, setCodingAnswers] = useState({});
   const navigate = useNavigate();
   const { examId } = useParams();
   const { cheatingLog } = useCheatingLog();
@@ -85,6 +88,16 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
         [currentQuestionData._id]: subjectiveAnswer,
       }));
     }
+    // Handle Coding
+    else if (currentQuestionData.questionType === 'coding') {
+      setCodingAnswers((prev) => ({
+        ...prev,
+        [currentQuestionData._id]: {
+          code: codingAnswer,
+          language: codingLanguage,
+        },
+      }));
+    }
 
     if (isLastQuestion) {
       // Save cheating log FIRST before anything else
@@ -125,12 +138,21 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
           finalSubjectiveAnswers[currentQuestionData._id] = subjectiveAnswer;
         }
 
+        const finalCodingAnswers = { ...codingAnswers };
+        if (codingAnswer && currentQuestionData.questionType === 'coding') {
+          finalCodingAnswers[currentQuestionData._id] = {
+            code: codingAnswer,
+            language: codingLanguage,
+          };
+        }
+
         await axiosInstance.post(
           '/api/users/results',
           {
             examId,
             answers: answersObject,
             subjectiveAnswers: finalSubjectiveAnswers,
+            codingAnswers: finalCodingAnswers,
           },
           {
             withCredentials: true,
@@ -148,6 +170,8 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
 
     setSelectedOption(null);
     setSubjectiveAnswer('');
+    setCodingAnswer('');
+    setCodingLanguage('javascript');
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
@@ -175,10 +199,52 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
               {questions[currentQuestion]?.questionType === 'subjective' && (
                 <Chip label={`${questions[currentQuestion].ansmarks} marks`} color="primary" size="small" sx={{ ml: 2 }} />
               )}
+              {questions[currentQuestion]?.questionType === 'coding' && (
+                <Chip label={`${questions[currentQuestion].ansmarks || 10} marks`} color="secondary" size="small" sx={{ ml: 2 }} />
+              )}
             </Typography>
             <Typography variant="body1" mb={3}>
               {questions[currentQuestion].question}
             </Typography>
+            
+            {/* Coding Question - Show Description */}
+            {questions[currentQuestion]?.questionType === 'coding' && questions[currentQuestion].description && (
+              <Box mb={2} p={2} sx={{ backgroundColor: '#F8F9FB', borderRadius: '8px' }}>
+                <Typography variant="body2" color="text.secondary" mb={1} fontWeight={600}>
+                  Problem Description:
+                </Typography>
+                <Typography variant="body2" whiteSpace="pre-wrap">
+                  {questions[currentQuestion].description}
+                </Typography>
+              </Box>
+            )}
+            
+            {/* Coding Question - Show Sample Input/Output */}
+            {questions[currentQuestion]?.questionType === 'coding' && (
+              <Box mb={2}>
+                {questions[currentQuestion].sampleInput && (
+                  <Box mb={1} p={2} sx={{ backgroundColor: '#F0F8FF', borderRadius: '8px' }}>
+                    <Typography variant="body2" fontWeight={600} color="#003974" mb={1}>
+                      Sample Input:
+                    </Typography>
+                    <Typography variant="body2" component="pre" sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                      {questions[currentQuestion].sampleInput}
+                    </Typography>
+                  </Box>
+                )}
+                {questions[currentQuestion].sampleOutput && (
+                  <Box mb={1} p={2} sx={{ backgroundColor: '#F0FFF0', borderRadius: '8px' }}>
+                    <Typography variant="body2" fontWeight={600} color="#003974" mb={1}>
+                      Sample Output:
+                    </Typography>
+                    <Typography variant="body2" component="pre" sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                      {questions[currentQuestion].sampleOutput}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
+            
             <Box mb={10}>
               {questions[currentQuestion]?.questionType === 'subjective' ? (
                 <TextField
@@ -190,6 +256,47 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
                   onChange={(e) => setSubjectiveAnswer(e.target.value)}
                   variant="outlined"
                 />
+              ) : questions[currentQuestion]?.questionType === 'coding' ? (
+                <>
+                  <Box mb={2}>
+                    <InputLabel id="coding-language-label" sx={{ mb: 1, color: '#003974', fontWeight: 600 }}>
+                      Select Programming Language
+                    </InputLabel>
+                    <Select
+                      labelId="coding-language-label"
+                      value={codingLanguage}
+                      onChange={(e) => setCodingLanguage(e.target.value)}
+                      fullWidth
+                      sx={{
+                        backgroundColor: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#003974',
+                        },
+                      }}
+                    >
+                      {(questions[currentQuestion].allowedLanguages || ['JavaScript', 'Python']).map((lang) => (
+                        <MenuItem key={lang} value={lang.toLowerCase()}>
+                          {lang}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </Box>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={15}
+                    placeholder="Write your code here..."
+                    value={codingAnswer}
+                    onChange={(e) => setCodingAnswer(e.target.value)}
+                    variant="outlined"
+                    sx={{
+                      '& textarea': {
+                        fontFamily: 'monospace',
+                        fontSize: '14px',
+                      },
+                    }}
+                  />
+                </>
               ) : (
                 <FormControl component="fieldset">
                   <RadioGroup
@@ -218,6 +325,8 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
                 disabled={
                   questions[currentQuestion]?.questionType === 'subjective'
                     ? subjectiveAnswer.trim() === ''
+                    : questions[currentQuestion]?.questionType === 'coding'
+                    ? codingAnswer.trim() === ''
                     : selectedOption === null
                 }
                 style={{ marginLeft: 'auto' }}

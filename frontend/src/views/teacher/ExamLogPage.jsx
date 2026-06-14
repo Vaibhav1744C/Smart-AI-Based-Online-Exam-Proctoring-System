@@ -7,8 +7,15 @@ import CheatingTable from './components/CheatingTable';
 const ExamLogPage = () => {
   return (
     <PageContainer title="ExamLog Page" description="this is ExamLog page">
-      <DashboardCard title="ExamLog Page">
-        <Typography>This is a ExamLog page</Typography>
+      <DashboardCard 
+        title="Exam Logs" 
+        sx={{
+          '& .MuiCardHeader-title': {
+            color: '#003974',
+            fontWeight: 600,
+          }
+        }}
+      >
         <CheatingTable />
       </DashboardCard>
     </PageContainer>

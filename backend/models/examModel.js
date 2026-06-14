@@ -40,6 +40,11 @@ const examSchema = mongoose.Schema(
       enum: ['First Year', 'Second Year', 'Third Year', 'Fourth Year', 'Graduate', 'All'],
       default: ['All'],
     },
+    // Coding round enabled/disabled
+    hasCodingRound: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

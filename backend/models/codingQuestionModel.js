@@ -8,13 +8,31 @@ const codingSchema = new mongoose.Schema(
     },
     question: {
       type: String,
-      required: [true, "Question is required"],
+      required: [true, "Question title is required"],
       trim: true,
     },
     description: {
       type: String,
       required: [true, "Question description is required"],
       trim: true,
+    },
+    ansmarks: {
+      type: Number,
+      default: 10,
+    },
+    sampleInput: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    sampleOutput: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    allowedLanguages: {
+      type: [String],
+      default: ["JavaScript", "Python"],
     },
     submittedAnswer: {
       code: {
@@ -23,7 +41,7 @@ const codingSchema = new mongoose.Schema(
       },
       language: {
         type: String,
-        enum: ["javascript", "python", "java", "cpp"],
+        enum: ["javascript", "python", "java", "cpp", "c"],
       },
       status: {
         type: String,

@@ -37,31 +37,30 @@ const Exams = () => {
       sx={{ 
         width: '100%',
         px: { xs: 2, sm: 3, md: 4, lg: 5 },
-        py: 5,
-        backgroundColor: '#F8FAFC',
+        py: 4,
+        backgroundColor: '#F8F9FB',
         minHeight: '100vh'
       }}
     >
       {/* Active Exams Section */}
       {availableExams.length > 0 && (
-        <Box mb={6}>
+        <Box mb={5}>
           <Typography 
             variant="h4" 
             sx={{ 
               fontWeight: 700,
-              color: '#1e293b',
-              mb: 4,
-              fontSize: { xs: '28px', md: '34px' },
-              letterSpacing: '-0.5px'
+              color: '#003974',
+              mb: 3,
+              fontSize: '24px',
             }}
           >
             Active Exams
           </Typography>
           
-          <Grid container spacing={4}>
-            {availableExams.map((exam) => (
+          <Grid container spacing={3}>
+            {availableExams.map((exam, index) => (
               <Grid item xs={12} sm={6} md={4} key={exam._id}>
-                <ExamCard exam={exam} isCompleted={false} />
+                <ExamCard exam={exam} isCompleted={false} serialNumber={index + 1} />
               </Grid>
             ))}
           </Grid>
@@ -75,19 +74,18 @@ const Exams = () => {
             variant="h4" 
             sx={{ 
               fontWeight: 700,
-              color: '#64748b',
-              mb: 4,
-              fontSize: { xs: '28px', md: '34px' },
-              letterSpacing: '-0.5px'
+              color: '#003974',
+              mb: 3,
+              fontSize: '24px',
             }}
           >
             Previous Exams
           </Typography>
           
-          <Grid container spacing={4}>
-            {completedExams.map((exam) => (
+          <Grid container spacing={3}>
+            {completedExams.map((exam, index) => (
               <Grid item xs={12} sm={6} md={4} key={exam._id}>
-                <ExamCard exam={exam} isCompleted={true} />
+                <ExamCard exam={exam} isCompleted={true} serialNumber={availableExams.length + index + 1} />
               </Grid>
             ))}
           </Grid>
@@ -96,7 +94,7 @@ const Exams = () => {
 
       {availableExams.length === 0 && completedExams.length === 0 && (
         <Box textAlign="center" py={8}>
-          <Typography color="text.secondary" variant="h6">
+          <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 600 }}>
             No exams available
           </Typography>
         </Box>

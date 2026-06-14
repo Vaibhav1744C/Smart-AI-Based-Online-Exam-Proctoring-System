@@ -7,6 +7,7 @@ import MultipleChoiceQuestion from './Components/MultipleChoiceQuestion';
 import NumberOfQuestions from './Components/NumberOfQuestions';
 import WebCam from './Components/WebCam';
 import { useGetExamsQuery, useGetQuestionsQuery } from '../../slices/examApiSlice';
+import { useGetCodingQuestionsQuery } from 'src/slices/codingQuestionApiSlice';
 import { useSaveCheatingLogMutation } from 'src/slices/cheatingLogApiSlice';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -27,6 +28,7 @@ const TestPage = () => {
   const [lastTabSwitchTime, setLastTabSwitchTime] = useState(0);
   const [questions, setQuestions] = useState([]);
   const { data, isLoading } = useGetQuestionsQuery(examId);
+  const { data: codingQuestionsData, isLoading: isCodingLoading } = useGetCodingQuestionsQuery(examId);
   const [score, setScore] = useState(0);
   const answersRef = useRef({}); // shared answers ref updated by MCQ component
 
@@ -309,11 +311,28 @@ const TestPage = () => {
 
   useEffect(() => {
     if (data) {
-      console.log('Questions loaded:', data.length, 'questions');
+      console.log('MCQ Questions loaded:', data.length, 'questions');
       console.log('Question types:', data.map(q => ({ type: q.questionType, question: q.question.substring(0, 30) })));
-      setQuestions(data);
+      
+      // Combine MCQ and coding questions
+      const allQuestions = [...data];
+      
+      if (codingQuestionsData && codingQuestionsData.length > 0) {
+        console.log('Coding Questions loaded:', codingQuestionsData.length, 'questions');
+        // Add coding questions with a special marker
+        codingQuestionsData.forEach(cq => {
+          allQuestions.push({
+            ...cq,
+            questionType: 'coding',
+            _id: cq._id,
+          });
+        });
+      }
+      
+      console.log('Total questions (MCQ + Coding):', allQuestions.length);
+      setQuestions(allQuestions);
     }
-  }, [data]);
+  }, [data, codingQuestionsData]);
 
   // Remove the old handleMcqCompletion function that redirects to coding
   // Both buttons should now directly submit the test
@@ -439,7 +458,7 @@ const TestPage = () => {
     setScore(score + 1);
   };
 
-  if (isExamsLoading) {
+  if (isExamsLoading || isLoading || isCodingLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
@@ -462,12 +481,12 @@ const TestPage = () => {
                 alignItems="center"
                 justifyContent="center"
               >
-                {isLoading ? (
+                {isLoading || isCodingLoading ? (
                   <CircularProgress />
                 ) : (
                   <MultipleChoiceQuestion
                     submitTest={handleTestSubmission}
-                    questions={data}
+                    questions={questions}
                     saveUserTestScore={saveUserTestScore}
                     answersRef={answersRef}
                   />

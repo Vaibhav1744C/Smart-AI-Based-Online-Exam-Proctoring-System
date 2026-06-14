@@ -1,12 +1,12 @@
 import {
-  IconAperture,
-  IconCopy,
   IconLayoutDashboard,
-  IconLogin,
-  IconMoodHappy,
-  IconTypography,
-  IconUserPlus,
-  IconPlayerPlayFilled,
+  IconFileText,
+  IconClipboardList,
+  IconCirclePlus,
+  IconList,
+  IconChartBar,
+  IconSettings,
+  IconLogout,
 } from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
@@ -30,13 +30,13 @@ const Menuitems = [
   {
     id: uniqueId(),
     title: 'Exams',
-    icon: IconTypography,
+    icon: IconFileText,
     href: '/exam',
   },
   {
     id: uniqueId(),
     title: 'Result',
-    icon: IconCopy,
+    icon: IconClipboardList,
     href: '/result',
   },
   {
@@ -46,33 +46,38 @@ const Menuitems = [
   {
     id: uniqueId(),
     title: 'Create Exam',
-    icon: IconMoodHappy,
+    icon: IconCirclePlus,
     href: '/create-exam',
   },
   {
     id: uniqueId(),
     title: 'Add Questions',
-    icon: IconLogin,
+    icon: IconList,
     href: '/add-questions',
   },
   {
     id: uniqueId(),
     title: 'Exam Logs',
-    icon: IconUserPlus,
+    icon: IconChartBar,
     href: '/exam-log',
   },
-  // {
-  //   id: uniqueId(),
-  //   title: 'Exam  Sale comp',
-  //   icon: IconPlayerPlayFilled,
-  //   href: '/generate-report',
-  // },
-  // {
-  //   id: uniqueId(),
-  //   title: 'Sample Page',
-  //   icon: IconAperture,
-  //   href: '/sample-page',
-  // },
+];
+
+// Bottom menu items (Settings and Logout)
+export const BottomMenuItems = [
+  {
+    id: uniqueId(),
+    title: 'Settings',
+    icon: IconSettings,
+    href: '/user/profile',
+  },
+  {
+    id: uniqueId(),
+    title: 'Logout',
+    icon: IconLogout,
+    href: '/auth/login',
+    isLogout: true,
+  },
 ];
 
 export default Menuitems;

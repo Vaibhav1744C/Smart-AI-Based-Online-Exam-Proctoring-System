@@ -76,14 +76,14 @@ export default function CheatingTable() {
   };
 
   const getViolationColor = (count) => {
-    if (count > 5) return 'error';
-    if (count > 2) return 'warning';
-    return 'success';
+    if (count > 5) return { bg: '#FFEBEE', color: '#ED1C24', border: '#ED1C24' };
+    if (count > 2) return { bg: '#FFF3CD', color: '#856404', border: '#FFC107' };
+    return { bg: '#E8F5E9', color: '#4CAF50', border: '#4CAF50' };
   };
 
   const getViolationIcon = (count) => {
-    if (count > 5) return <WarningIcon color="error" />;
-    if (count > 2) return <WarningIcon color="warning" />;
+    if (count > 5) return <WarningIcon sx={{ fontSize: '1rem' }} />;
+    if (count > 2) return <WarningIcon sx={{ fontSize: '1rem' }} />;
     return null;
   };
 
@@ -115,14 +115,24 @@ export default function CheatingTable() {
 
   return (
     <Box>
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Paper sx={{ p: 2, mb: 2, borderRadius: '12px', border: '1px solid #ECECEC' }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
             <Select
-              label="Select Exam"
               value={selectedExamId || ''}
               onChange={(e) => setSelectedExamId(e.target.value)}
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#ECECEC',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#003974',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#003974',
+                }
+              }}
             >
               {examsData.map((exam) => (
                 <MenuItem key={exam.examId} value={exam.examId}>
@@ -138,6 +148,22 @@ export default function CheatingTable() {
               fullWidth
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#ECECEC',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#003974',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#003974',
+                  }
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#003974',
+                }
+              }}
             />
           </Grid>
         </Grid>
@@ -154,50 +180,72 @@ export default function CheatingTable() {
           </Typography>
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ borderRadius: '12px', border: '1px solid #ECECEC' }}>
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Sno</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Total Violations</TableCell>
-                <TableCell>Screenshots</TableCell>
+              <TableRow sx={{ backgroundColor: '#F8F9FB' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#0F2242' }}>Sno</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#0F2242' }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#0F2242' }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#0F2242' }}>Total Violations</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#0F2242' }}>Screenshots</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={5} align="center" sx={{ py: 4, color: '#6B7280' }}>
                     No cheating logs found for this exam
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.map((log, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{log.username}</TableCell>
-                    <TableCell>{log.email}</TableCell>
-                    <TableCell>
-                      <Chip
-                        icon={getViolationIcon(log.totalViolations || 0)}
-                        label={log.totalViolations || 0}
-                        color={getViolationColor(log.totalViolations || 0)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="View Screenshots">
-                        <IconButton
-                          onClick={() => handleViewScreenshots(log)}
-                          disabled={!log.screenshots?.length}
-                        >
-                          <ImageIcon color={log.screenshots?.length ? 'primary' : 'disabled'} />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredUsers.map((log, index) => {
+                  const violationStyle = getViolationColor(log.totalViolations || 0);
+                  return (
+                    <TableRow 
+                      key={index}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: '#F8F9FB',
+                        }
+                      }}
+                    >
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell sx={{ fontWeight: 500 }}>{log.username}</TableCell>
+                      <TableCell sx={{ color: '#6B7280' }}>{log.email}</TableCell>
+                      <TableCell>
+                        <Chip
+                          icon={getViolationIcon(log.totalViolations || 0)}
+                          label={log.totalViolations || 0}
+                          size="small"
+                          sx={{
+                            backgroundColor: violationStyle.bg,
+                            color: violationStyle.color,
+                            borderColor: violationStyle.border,
+                            border: '1px solid',
+                            fontWeight: 600,
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="View Screenshots">
+                          <IconButton
+                            onClick={() => handleViewScreenshots(log)}
+                            disabled={!log.screenshots?.length}
+                            sx={{
+                              color: log.screenshots?.length ? '#003974' : '#ECECEC',
+                              '&:hover': {
+                                backgroundColor: '#F0F7FF',
+                              }
+                            }}
+                          >
+                            <ImageIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -205,20 +253,46 @@ export default function CheatingTable() {
       )}
 
       {/* Screenshots Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+          }
+        }}
+      >
+        <DialogTitle sx={{ borderBottom: '1px solid #ECECEC' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Screenshots - {selectedLog?.username}</Typography>
-            <IconButton onClick={handleCloseDialog}>
+            <Typography variant="h6" sx={{ color: '#003974', fontWeight: 600 }}>
+              Screenshots - {selectedLog?.username}
+            </Typography>
+            <IconButton 
+              onClick={handleCloseDialog}
+              sx={{
+                color: '#6B7280',
+                '&:hover': {
+                  backgroundColor: '#F8F9FB',
+                }
+              }}
+            >
               <CloseIcon />
             </IconButton>
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pt: 3 }}>
           <Grid container spacing={2}>
             {selectedLog?.screenshots?.map((screenshot, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
-                <Card>
+                <Card 
+                  elevation={0}
+                  sx={{ 
+                    border: '1px solid #ECECEC',
+                    borderRadius: '8px',
+                  }}
+                >
                   <CardMedia
                     component="img"
                     height="200"
@@ -227,10 +301,10 @@ export default function CheatingTable() {
                     sx={{ objectFit: 'cover' }}
                   />
                   <CardContent>
-                    <Typography variant="subtitle2" color="text.secondary">
+                    <Typography variant="subtitle2" sx={{ color: '#0F2242', fontWeight: 600 }}>
                       Type: {screenshot.type}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{ color: '#6B7280' }}>
                       Detected: {new Date(screenshot.detectedAt).toLocaleString()}
                     </Typography>
                   </CardContent>

@@ -15,26 +15,44 @@ const NavItem = ({ item, level, pathDirect, onClick }) => {
   const Icon = item.icon;
   const theme = useTheme();
   const itemIcon = <Icon stroke={1.5} size="1.3rem" />;
+  const isActive = pathDirect === item.href;
 
   const ListItemStyled = styled(ListItem)(() => ({
     whiteSpace: 'nowrap',
-    marginBottom: '2px',
-    padding: '8px 10px',
+    marginBottom: '4px',
+    padding: '10px 16px',
     borderRadius: '8px',
-    backgroundColor: level > 1 ? 'transparent !important' : 'inherit',
-    color:
-      theme.palette.text.secondary,
-    paddingLeft: '10px',
+    backgroundColor: 'transparent',
+    color: '#0F2242',
+    paddingLeft: '16px',
+    position: 'relative',
+    transition: 'all 0.2s ease',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: '3px',
+      backgroundColor: isActive ? '#ED1C24' : 'transparent',
+      borderRadius: '0 4px 4px 0',
+    },
     '&:hover': {
-      backgroundColor: theme.palette.primary.light,
-      color: theme.palette.primary.main,
+      backgroundColor: '#F0F7FF',
+      color: '#003974',
+      '& .MuiListItemIcon-root': {
+        color: '#003974',
+      },
     },
     '&.Mui-selected': {
-      color: 'white',
-      backgroundColor: theme.palette.primary.main,
+      color: '#003974',
+      backgroundColor: '#F0F7FF',
+      '& .MuiListItemIcon-root': {
+        color: '#003974',
+      },
       '&:hover': {
-        backgroundColor: theme.palette.primary.main,
-        color: 'white',
+        backgroundColor: '#F0F7FF',
+        color: '#003974',
       },
     },
   }));
@@ -43,24 +61,34 @@ const NavItem = ({ item, level, pathDirect, onClick }) => {
     <List component="li" disablePadding key={item.id}>
       <ListItemStyled
         button
-        component={item.external ? 'a' : NavLink}
-        to={item.href}
-        href={item.external ? item.href : ''}
+        component={item.isLogout ? 'div' : (item.external ? 'a' : NavLink)}
+        to={!item.isLogout && !item.external ? item.href : undefined}
+        href={item.external ? item.href : undefined}
         disabled={item.disabled}
-        selected={pathDirect === item.href}
+        selected={isActive}
         target={item.external ? '_blank' : ''}
         onClick={onClick}
+        sx={{
+          cursor: 'pointer',
+        }}
       >
         <ListItemIcon
           sx={{
             minWidth: '36px',
             p: '3px 0',
-            color: 'inherit',
+            color: isActive ? '#003974' : '#6B7280',
           }}
         >
           {itemIcon}
         </ListItemIcon>
-        <ListItemText>
+        <ListItemText
+          sx={{
+            '& .MuiTypography-root': {
+              fontWeight: isActive ? 600 : 500,
+              fontSize: '0.95rem',
+            }
+          }}
+        >
           <>{item.title}</>
         </ListItemText>
       </ListItemStyled>

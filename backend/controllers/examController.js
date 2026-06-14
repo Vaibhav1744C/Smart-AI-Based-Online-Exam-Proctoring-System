@@ -76,7 +76,7 @@ const getExams = asyncHandler(async (req, res) => {
 // @route POST /api/exams
 // @access Private (admin)
 const createExam = asyncHandler(async (req, res) => {
-  const { examName, totalQuestions, duration, liveDate, deadDate, allowedDepartments, allowedClasses } = req.body;
+  const { examName, totalQuestions, duration, liveDate, deadDate, allowedDepartments, allowedClasses, hasCodingRound } = req.body;
 
   const exam = new Exam({
     examName,
@@ -86,6 +86,7 @@ const createExam = asyncHandler(async (req, res) => {
     deadDate,
     allowedDepartments: allowedDepartments || ['All'],
     allowedClasses: allowedClasses || ['All'],
+    hasCodingRound: hasCodingRound || false,
   });
 
   const createdExam = await exam.save();
