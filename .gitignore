@@ -42,3 +42,5 @@ coverage/
 # Ignore Java files
 *.java
 *.class
+DEPLOYMENT_FIX.md
+
