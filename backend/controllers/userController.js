@@ -97,7 +97,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   if (user) {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
-    user.role = req.body.role || user.role;
+    // role is intentionally not updatable — set at registration only
     
     // Update student profile fields
     if (req.body.department) user.department = req.body.department;

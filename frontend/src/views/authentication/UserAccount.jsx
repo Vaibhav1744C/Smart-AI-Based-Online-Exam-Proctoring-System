@@ -24,7 +24,6 @@ const userValidationSchema = yup.object({
     .string()
     .required('Confirm Password is required')
     .oneOf([yup.ref('password'), null], 'Password must match'),
-  role: yup.string().oneOf(['student', 'teacher'], 'Invalid role').required('Role is required'),
 });
 
 const UserAccount = () => {
@@ -35,7 +34,6 @@ const UserAccount = () => {
     email: userInfo.email || '',
     password: userInfo.password || '',
     confirm_password: '',
-    role: userInfo.role || 'student',
   };
 
   const formik = useFormik({
@@ -50,7 +48,7 @@ const UserAccount = () => {
 
   const [updateProfile, { isLoading }] = useUpdateUserMutation();
 
-  const handleSubmit = async ({ name, email, password, confirm_password, role }) => {
+  const handleSubmit = async ({ name, email, password, confirm_password }) => {
     if (password !== confirm_password) {
       toast.error('Passwords do not match');
     } else {
@@ -60,7 +58,6 @@ const UserAccount = () => {
           name,
           email,
           password,
-          role,
         }).unwrap();
         dispatch(setCredentials(res));
         toast.success('Profile updated successfully');

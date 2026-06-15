@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Button, Select, MenuItem } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
 import { Stack } from '@mui/system';
@@ -122,33 +122,6 @@ const AuthUpdate = ({ formik, title, subtitle, subtext }) => {
             // onChange={onConfirmPasswordChange} // Call the callback function on change
             //   size="small"
           />
-          <Typography
-            variant="subtitle1"
-            fontWeight={600}
-            component="label"
-            htmlFor="role"
-            mb="5px"
-            mt="25px"
-          >
-            Role
-          </Typography>
-          <Select
-            id="role"
-            name="role"
-            required
-            displayEmpty
-            value={values.role}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={!!(touched.role && errors.role)}
-            // value={userRole}
-            // onChange={onRoleChange} // Call the callback function on change
-            // inputProps={{ 'aria-label': 'Without label' }}
-            //   size="small"
-          >
-            <MenuItem value="student">Student</MenuItem>
-            <MenuItem value="teacher">Teacher</MenuItem>
-          </Select>
         </Stack>
         <Button
           // size="small"
