@@ -369,10 +369,80 @@ const getAllResults = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get exam analytics (students get anonymized stats, teachers get full details)
+// @route   GET /api/results/analytics/:examId
+// @access  Private
+const getExamAnalytics = asyncHandler(async (req, res) => {
+  const { examId } = req.params;
+  
+  // Get all results for this exam
+  const results = await Result.find({ examId });
+  
+  if (!results || results.length === 0) {
+    res.status(404);
+    throw new Error("No results found for this exam");
+  }
+  
+  // Get current user's result
+  const myResult = results.find(r => r.userId.toString() === req.user._id.toString());
+  
+  if (!myResult) {
+    res.status(404);
+    throw new Error("You have not taken this exam yet");
+  }
+  
+  // Calculate statistics
+  const scores = results.map(r => r.percentage || 0).sort((a, b) => b - a);
+  const myScore = myResult.percentage || 0;
+  
+  // Calculate rank
+  const rank = scores.findIndex(s => s === myScore) + 1;
+  
+  // Calculate percentile
+  const belowMe = scores.filter(s => s < myScore).length;
+  const percentile = scores.length > 1 ? ((belowMe / scores.length) * 100).toFixed(1) : 100;
+  
+  // Calculate average
+  const average = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+  
+  // Score distribution
+  const distribution = [
+    { range: '0-20%', count: scores.filter(s => s >= 0 && s < 20).length },
+    { range: '20-40%', count: scores.filter(s => s >= 20 && s < 40).length },
+    { range: '40-60%', count: scores.filter(s => s >= 40 && s < 60).length },
+    { range: '60-80%', count: scores.filter(s => s >= 60 && s < 80).length },
+    { range: '80-100%', count: scores.filter(s => s >= 80 && s <= 100).length },
+  ];
+  
+  // Return analytics
+  res.status(200).json({
+    success: true,
+    data: {
+      myScore,
+      rank,
+      totalStudents: scores.length,
+      percentile,
+      average,
+      highest: scores[0],
+      lowest: scores[scores.length - 1],
+      distribution,
+      // Only include student details for teachers
+      ...(req.user.role === 'teacher' && {
+        allResults: results.map(r => ({
+          userId: r.userId,
+          score: r.percentage,
+          totalMarks: r.totalMarks,
+        }))
+      })
+    }
+  });
+});
+
 export {
   saveResult,
   getResultsByExamId,
   getUserResults,
   toggleResultVisibility,
   getAllResults,
+  getExamAnalytics,
 };

@@ -6,6 +6,7 @@ import {
   getUserResults,
   toggleResultVisibility,
   getAllResults,
+  getExamAnalytics,
 } from "../controllers/resultController.js";
 
 const resultRoutes = express.Router();
@@ -30,6 +31,9 @@ resultRoutes.get("/results/exam/:examId", (req, res, next) => {
 
 // Get results for current user
 resultRoutes.get("/results/user", getUserResults);
+
+// Get exam analytics (students can see anonymized stats)
+resultRoutes.get("/results/analytics/:examId", getExamAnalytics);
 
 // Toggle result visibility
 resultRoutes.put(

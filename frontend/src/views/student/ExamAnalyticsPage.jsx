@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  Paper,
   Card,
   CardContent,
   Grid,
@@ -13,40 +12,54 @@ import {
   IconButton,
   Divider,
 } from '@mui/material';
-import { ArrowBack, TrendingUp, EmojiEvents, Assessment } from '@mui/icons-material';
+import { ArrowBack } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import axiosInstance from '../../axios';
-import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
-
-const COLORS = ['#003974', '#ED1C24', '#0088FE', '#00C49F', '#FFBB28'];
 
 const ExamAnalyticsPage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const { userInfo } = useSelector((state) => state.auth);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [examData, setExamData] = useState(null);
   const [myResult, setMyResult] = useState(null);
-  const [allResults, setAllResults] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+
+  // Custom tooltip that only shows for bars with count > 0
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length && payload[0].value > 0) {
+      return (
+        <Box
+          sx={{
+            backgroundColor: 'white',
+            border: '1px solid #ECECEC',
+            borderRadius: '8px',
+            p: 1.5,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 600, color: '#003974' }}>
+            {payload[0].payload.range}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#6B7280' }}>
+            Count: {payload[0].value}
+          </Typography>
+        </Box>
+      );
+    }
+    return null;
+  };
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -67,17 +80,31 @@ const ExamAnalyticsPage = () => {
         const myExamResult = myResultResponse.data.data.find(r => r.examId === examId);
         setMyResult(myExamResult);
 
-        // Fetch all results for this exam (for comparison)
-        const allResultsResponse = await axiosInstance.get(`/api/users/results/exam/${examId}`, {
+        if (!myExamResult) {
+          setError('No result found for this exam');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch analytics using the new student-accessible endpoint
+        const analyticsResponse = await axiosInstance.get(`/api/users/results/analytics/${examId}`, {
           withCredentials: true,
         });
-        setAllResults(allResultsResponse.data.data || []);
+        
+        const analyticsData = analyticsResponse.data.data;
+        
+        setAnalytics({
+          rank: analyticsData.rank,
+          totalStudents: analyticsData.totalStudents,
+          percentile: analyticsData.percentile,
+          average: analyticsData.average,
+          highest: analyticsData.highest,
+          lowest: analyticsData.lowest,
+          distribution: analyticsData.distribution,
+        });
 
-        // Calculate analytics
-        if (myExamResult && allResultsResponse.data.data) {
-          calculateAnalytics(myExamResult, allResultsResponse.data.data);
-        }
       } catch (err) {
+        console.error('Analytics fetch error:', err);
         setError(err.response?.data?.message || 'Failed to fetch analytics');
         toast.error('Failed to load exam analytics');
       } finally {
@@ -89,40 +116,6 @@ const ExamAnalyticsPage = () => {
       fetchAnalytics();
     }
   }, [examId]);
-
-  const calculateAnalytics = (myResult, allResults) => {
-    const scores = allResults.map(r => r.percentage || 0).sort((a, b) => b - a);
-    const myScore = myResult.percentage || 0;
-    
-    // Calculate rank
-    const rank = scores.findIndex(s => s === myScore) + 1;
-    
-    // Calculate percentile
-    const belowMe = scores.filter(s => s < myScore).length;
-    const percentile = ((belowMe / scores.length) * 100).toFixed(1);
-    
-    // Calculate average
-    const average = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
-    
-    // Score distribution
-    const distribution = [
-      { range: '0-20%', count: scores.filter(s => s >= 0 && s < 20).length },
-      { range: '20-40%', count: scores.filter(s => s >= 20 && s < 40).length },
-      { range: '40-60%', count: scores.filter(s => s >= 40 && s < 60).length },
-      { range: '60-80%', count: scores.filter(s => s >= 60 && s < 80).length },
-      { range: '80-100%', count: scores.filter(s => s >= 80 && s <= 100).length },
-    ];
-
-    setAnalytics({
-      rank,
-      totalStudents: scores.length,
-      percentile,
-      average,
-      highest: scores[0],
-      lowest: scores[scores.length - 1],
-      distribution,
-    });
-  };
 
   const getPerformanceBadge = (score) => {
     if (score >= 90) return { label: 'Excellent', color: '#4CAF50' };
@@ -265,9 +258,28 @@ const ExamAnalyticsPage = () => {
                 <BarChart data={analytics?.distribution}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ECECEC" />
                   <XAxis dataKey="range" stroke="#6B7280" />
-                  <YAxis stroke="#6B7280" />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#003974" radius={[8, 8, 0, 0]} />
+                  <YAxis 
+                    stroke="#6B7280" 
+                    domain={[0, 'dataMax + 1']}
+                    allowDecimals={false}
+                    label={{ 
+                      value: 'Number of Students', 
+                      angle: -90, 
+                      position: 'insideLeft',
+                      offset: 10,
+                      style: { 
+                        fill: '#6B7280',
+                        textAnchor: 'middle'
+                      } 
+                    }}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
+                  <Bar 
+                    dataKey="count" 
+                    fill="#003974" 
+                    radius={[8, 8, 0, 0]}
+                    minPointSize={5}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </Card>
