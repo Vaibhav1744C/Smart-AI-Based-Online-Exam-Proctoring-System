@@ -41,7 +41,7 @@ export const examApiSlice = apiSlice.injectEndpoints({
     deleteExam: builder.mutation({
       query: (examId) => ({
         url: `${EXAMS_URL}/exam/${examId}`,
-        method: 'POST',
+        method: 'DELETE',
         credentials: 'include',
       }),
     }),

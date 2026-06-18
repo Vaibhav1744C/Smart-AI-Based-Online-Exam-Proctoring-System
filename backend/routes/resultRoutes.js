@@ -19,8 +19,14 @@ resultRoutes.post("/results", saveResult);
 // Get all results (for teachers)
 resultRoutes.get("/results/all", getAllResults);
 
-// Get results for a specific exam (for teachers)
-resultRoutes.get("/results/exam/:examId", getResultsByExamId);
+// Get results for a specific exam (teachers only)
+resultRoutes.get("/results/exam/:examId", (req, res, next) => {
+  if (req.user.role !== 'teacher') {
+    res.status(403);
+    throw new Error('Not authorized');
+  }
+  next();
+}, getResultsByExamId);
 
 // Get results for current user
 resultRoutes.get("/results/user", getUserResults);

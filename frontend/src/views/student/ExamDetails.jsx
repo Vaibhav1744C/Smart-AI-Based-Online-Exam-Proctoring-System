@@ -56,7 +56,7 @@ const DescriptionAndInstructions = () => {
   React.useEffect(() => {
     resetCheatingLog(examId);
   }, [examId]);
-  const { data: questions, isLoading } = useGetQuestionsQuery(examId);
+  const { data: questions, isLoading, isError } = useGetQuestionsQuery(examId);
   const [hasCodingQuestions, setHasCodingQuestions] = useState(false);
   const [examData, setExamData] = useState(null);
 
@@ -95,6 +95,14 @@ const DescriptionAndInstructions = () => {
 
   const mcqCount = questions?.filter(q => !q.questionType || q.questionType === 'mcq').length || 0;
   const subjectiveCount = questions?.filter(q => q.questionType === 'subjective').length || 0;
+
+  if (isError) {
+    return (
+      <Card><CardContent>
+        <Typography color="error">Failed to load exam questions. Please refresh and try again.</Typography>
+      </CardContent></Card>
+    );
+  }
 
   return (
     <Card>

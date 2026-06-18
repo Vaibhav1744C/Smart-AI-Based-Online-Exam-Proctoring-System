@@ -23,6 +23,7 @@ examRoutes.route("/questions/exam/:examId").get(protect, getQuestionsByExamId); 
 examRoutes.route("/exam/questions/:examId").get(protect, getQuestionsByExamId);
 examRoutes.route("/cheatingLogs/:examId").get(protect, getCheatingLogsByExamId);
 examRoutes.route("/cheatingLogs").post(protect, saveCheatingLog);
-examRoutes.route("/exam/:examId").post(protect, DeleteExamById);
+// Fix: use DELETE method instead of POST for deleting exams
+examRoutes.route("/exam/:examId").delete(protect, DeleteExamById);
 
 export default examRoutes;

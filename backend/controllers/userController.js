@@ -18,7 +18,6 @@ const authUser = asyncHandler(async (req, res) => {
       class: user.class,
       rollNo: user.rollNo,
       college: user.college,
-      password_encrypted: user.password,
       message: "User Successfully login with role: " + user.role,
     });
   } else {
@@ -56,7 +55,6 @@ const registerUser = asyncHandler(async (req, res) => {
       class: user.class,
       rollNo: user.rollNo,
       college: user.college,
-      password_encrypted: user.password,
       message: "User Successfully created with role: " + user.role,
     });
   } else {

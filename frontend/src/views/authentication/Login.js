@@ -22,7 +22,7 @@ const userValidationSchema = yup.object({
   email: yup.string('Enter your email').email('Enter a valid email').required('Email is required'),
   password: yup
     .string('Enter your password')
-    .min(2, 'Password should be of minimum 8 characters length')
+    .min(1, 'Password is required')
     .required('Password is required'),
 });
 const initialUserValues = {

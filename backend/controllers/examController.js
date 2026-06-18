@@ -78,6 +78,16 @@ const getExams = asyncHandler(async (req, res) => {
 const createExam = asyncHandler(async (req, res) => {
   const { examName, totalQuestions, duration, liveDate, deadDate, allowedDepartments, allowedClasses, hasCodingRound } = req.body;
 
+  if (!examName || !totalQuestions || !duration || !liveDate || !deadDate) {
+    res.status(400);
+    throw new Error("Please provide all required fields");
+  }
+
+  if (new Date(liveDate) >= new Date(deadDate)) {
+    res.status(400);
+    throw new Error("Live date must be before deadline date");
+  }
+
   const exam = new Exam({
     examName,
     totalQuestions,
