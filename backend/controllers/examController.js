@@ -1,5 +1,10 @@
 import asyncHandler from "express-async-handler";
 import Exam from "./../models/examModel.js";
+import Question from "./../models/quesModel.js";
+import Result from "./../models/resultModel.js";
+import CheatingLog from "./../models/cheatingLogModel.js";
+import SubjectiveResponse from "./../models/subjectiveResponseModel.js";
+import CodingQuestion from "./../models/codingQuestionModel.js";
 
 // @desc Get all exams (filtered by student's department and class)
 // @route GET /api/exams
@@ -111,13 +116,23 @@ const createExam = asyncHandler(async (req, res) => {
 
 const DeleteExamById = asyncHandler(async (req, res) => {
   const { examId } = req.params;
-  const exam = await Exam.findOneAndDelete({ examId: examId });
+  const exam = await Exam.findOneAndDelete({ examId });
   if (!exam) {
     res.status(404);
     throw new Error("Exam not found");
   }
-  console.log("deleted exam", exam);
-  res.status(200).json(exam);
+
+  // Cascade delete all related data
+  await Promise.all([
+    Question.deleteMany({ examId }),
+    Result.deleteMany({ examId }),
+    CheatingLog.deleteMany({ examId }),
+    SubjectiveResponse.deleteMany({ examId }),
+    CodingQuestion.deleteMany({ examId }),
+  ]);
+
+  console.log(`Deleted exam ${examId} and all related data`);
+  res.status(200).json({ message: "Exam and all related data deleted successfully" });
 });
 
 export { getExams, createExam, DeleteExamById };
